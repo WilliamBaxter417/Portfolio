@@ -1,3 +1,10 @@
+- FHCS is a novel signalling strategy developed for dual-function radar communications systems.
+- We study the impact of information embedding on the transmitted radar waveforms through an assessment of the average ambiguity function (AF), obtained via Monte Carlo methods.
+- Provide a link to one of the publications for further reading and clarification of the model and its results.
+- The script from which the following document is based is located [here](https://github.com/WilliamBaxter417/Portfolio/blob/main/Dynamic%20Programming%20%26%20Algorithm%20Design/Radar%20Performance%20Analysis/avgAF.py).
+- The \* indicates a reference to my thesis. <br>
+
+- Begin by importing the following libraries. We will use the Plotly Python Graphing library (insert reason). <br>
 ```python
 import math
 import numpy
@@ -6,7 +13,7 @@ import plotly.express as px
 import plotly.io as pio
 import DFRC
 ```
-
+- Initialise the following parameters to model the virtual DFRC system. <br>
 ```python
 ## INITIALISE DFRC PARAMETERS
 Fc = 8e9                                    # Carrier frequency.
@@ -32,6 +39,7 @@ FH_set = 1/math.sqrt(Ns) * numpy.exp(1j * 2 * numpy.pi * Fn * Kv * ns)  # Genera
 tau = numpy.arange(-Q*Ns+1,Q*Ns)/Fs         # Vector of time-delays.
 ```
 
+- Build the symbol dictionaries.
 ```python
 ## BUILD SYMBOL DICTIONARIES
 ### Refer to BuildDict function in DFRC.py for detailed listing of output variables.
@@ -39,6 +47,7 @@ L, L_tilde, N_bits, D, D_T_DIR, D_T_CMP = DFRC.BuildDict(K,M)
 L_delta = L - L_tilde
 ```
 
+- Since we are compressing the transmitted radar pulse, the ensuing time-bandwidth product must be satisfied to ensure proper radar operation\*.
 ```python
 ## CHECK TIME-BANDWIDTH PRODUCT
 NW = pow(L,Q)
@@ -51,21 +60,28 @@ else:
     print('Q * K = %d, TBWP = %d >>> BAD' % (Q*K,TBWP))
 ```
 
+- Symbol dictionary must be truncated to ensure proper communications performance.
+- Extract indices for those symbols from the full dictionary which will comprise the truncated dictionary\*.
 ```python
 ## CALCULATE AVERAGE AF ACROSS ALL REALISATIONS FOR TRUNCATED DICTIONARY
 # Store symbol indices from full dictionary used to construct complementarily truncated dictionary:
 SymInd = numpy.concatenate((numpy.arange(int(L_tilde-L_tilde/2)), numpy.arange(int(L_tilde - L_tilde/2 + L_delta),L)))
+```
 
+- Initialise variables used to store results of Monte Carlo simulation.
+```python
 W_FHCS = numpy.zeros((M,Q*Ns), dtype = 'complex')   # Initialise FHCS waveform realisation.
 afs = numpy.zeros((len(tau),M,M))                   # Initialise AF results matrix.
 AFs = numpy.zeros((len(tau),M,M))                   # Initialise AF results matrix.
 ```
 
+- For the truncated dictionary, generate the complete set of permuted symbol indices possible for transmission by the DFRC system\*.
 ```python
 # Build matrix of symbol index permutations constructing each of the NW_trunc realisations:
 WPI = numpy.array(list(itertools.product(SymInd, repeat = Q)))
 ```
 
+- Begin Monte Carlo simulation.
 ```python
 ## SYNTHESISE AF FOR EACH WAVEFORM REALISATION:
 print('Iterating over NW_trunc = %d realisations...\n' % NW_trunc)
@@ -95,6 +111,8 @@ for i in range(NW_trunc):
         print('Completed %d realisations...\n' % i)     # Print status.
 ```
 
+- Data in AFs is cleaned to extract and store the auto-AFs (AAF) and cross-AFs (CAF) in their own variables.
+- AAF and CAF are summed and then averaged across the number of possible transmitted waveforms.
 ```python
 ## DATA CLEANING AND EXTRACTION
 # Reshape AFs_trunc matrix to extract auto-AF and cross-AF results:
@@ -115,6 +133,7 @@ fhcs_avgAF = numpy.divide(FHCS_AAF + FHCS_CAF, M*Q*NW_trunc)
 FHCS_avgAF = numpy.divide(fhcs_avgAF, numpy.max(fhcs_avgAF))
 ```
 
+- Generate plots.
 ```python
 ## GENERATE PLOTS
 # Build time indices normalised by subpulse-width Delta_t:
