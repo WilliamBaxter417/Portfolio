@@ -1,5 +1,5 @@
 # Managing Customer and Product Data
-The following project contains my solutions to the SQL (T-SQL) challenges hosted on the Microsoft Learn framework. The DBMS used for this project is Azure SQL Database, with the project utilising a sample DB for the fictitious _Adventure Works Cycles_ company whose tables (and foreign key references) are shown below:
+The following project contains my solutions to the SQL (T-SQL) challenges hosted on the Microsoft Learn framework. The DBMS used for this project is Azure SQL Database, with the project utilising a sample DB for the fictitious _Adventure Works Cycles_ company whose entity relation diagram (ERD) is shown below:
 
 ![adventureworks-erd](https://github.com/WilliamBaxter417/Portfolio/blob/main/Reporting%20%26%20Database%20Management/adventureworks-erd.png)
 
