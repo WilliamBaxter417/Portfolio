@@ -1,5 +1,5 @@
 - FHCS is a novel signalling strategy developed for dual-function radar communications systems.
-- We study the impact of information embedding on the transmitted radar waveforms through an assessment of the average ambiguity function (AF), obtained via Monte Carlo methods.
+- We study the communications performance of the FHCS scheme through an assessment of the symbol error rate (SER) as obtained via Monte Carlo methods.
 - Provide a link to one of the publications for further reading and clarification of the model and its results.
 - The script from which the following document is based is located [here](https://github.com/WilliamBaxter417/Portfolio/blob/main/Dynamic%20Programming%20%26%20Algorithm%20Design/Communications%20Performance%20Analysis/FHCS_KvsSER.py).
 - The \* indicates a reference to my thesis. <br>
