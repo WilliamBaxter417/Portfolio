@@ -3,24 +3,7 @@ The following project contains my solutions to the SQL (T-SQL) challenges hosted
 
 ![adventureworks-erd](https://github.com/WilliamBaxter417/Portfolio/blob/main/Reporting%20%26%20Database%20Management/adventureworks-erd.png)
 
-To generate the sample DB, use the following instructions. _Note: these instructions are taken from the Microsoft Learn resource where Azure Data Studio is used as the main program._
-1. Download the **adventureworkslt.sql** script (included in this repository).
-2. Start Azure Data Studio, and open the **adventureworkslt.sql** script file.
-3. In the script pane, connect to your SQL Server Express server using the following information:
-    - **Connection type**: SQL Server
-    - **Server**: localhost\SQLExpress
-    - **Authentication type**: Windows Authentication
-    - **Database**: master
-    - **Server group**: \<Default\>
-    - **Name**: _leave blank_
-4. Ensure the **master** database is selected, and then run the script to create the **adventureworks** database. This will take a few minutes.
-5. After the database has been created, on the **Connections** pane, in the **Servers** section, create a new connection with the following settings:
-    - **Connection type**: SQL Server
-    - **Server**: localhost\SQLExpress
-    - **Authentication Type**: Windows Authentication
-    - **Database**: adventureworks
-    - **Server group**: \<Default\>
-    - **Name**: AdventureWorks
+The sample DB can be found [here](https://github.com/WilliamBaxter417/Portfolio/blob/main/Reporting%20%26%20Database%20Management/adventureworkslt.sql).
 
 ## Challenges
 [Retrieve customer data](#retrieve-customer-data)
