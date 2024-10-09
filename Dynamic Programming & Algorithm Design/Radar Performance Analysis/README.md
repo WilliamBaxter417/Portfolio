@@ -147,6 +147,8 @@ fig.update_layout(xaxis_title = "Chip delay", yaxis_title = "Amplitude (dB)")
 fig.show()
 ```
 
+Results:
+![avgAF](https://github.com/WilliamBaxter417/Portfolio/blob/main/Dynamic%20Programming%20%26%20Algorithm%20Design/Radar%20Performance%20Analysis/avgAF.png)
 
 
 
