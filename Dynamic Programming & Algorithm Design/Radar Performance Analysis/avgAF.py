@@ -54,7 +54,7 @@ AFs = numpy.zeros((len(tau),M,M))                   # Initialise AF results matr
 # Build matrix of symbol index permutations constructing each of the NW_trunc realisations:
 WPI = numpy.array(list(itertools.product(SymInd, repeat = Q)))
 
-# Synthesise AF for each waveform realisation:
+## SYNTHESISE AF FOR EACH WAVEFORM REALISATION:
 print('Iterating over NW_trunc = %d realisations...\n' % NW_trunc)
 for i in range(NW_trunc):
     # Obtain waveform realisation index:
@@ -81,7 +81,7 @@ for i in range(NW_trunc):
     if (i % 1000 == 0):
         print('Completed %d realisations...\n' % i)     # Print status.
 
-## DATA MANIPULATION
+## DATA CLEANING AND EXTRACTION
 # Reshape AFs_trunc matrix to extract auto-AF and cross-AF results:
 n3, n1, n2 = AFs.shape
 FHCS_AF = numpy.transpose(numpy.reshape(AFs, (n3, n1*n2)))
