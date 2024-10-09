@@ -97,5 +97,5 @@ fig.show()
 ```
 
 Results:
-
+![SERvsSNR](https://github.com/WilliamBaxter417/Portfolio/blob/main/Dynamic%20Programming%20%26%20Algorithm%20Design/Communications%20Performance%20Analysis/SERvsSNR.png)
 
