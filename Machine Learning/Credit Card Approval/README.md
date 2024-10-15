@@ -1,1 +1,207 @@
+# Predicting Credit Card Approvals using Machine Learning
+Credit card approvals comprise the many types of applications received by modern commerical banking institutions. A variety of metrics are used to determine an individual's successful credit card approval, inluding their age, income and credit score. With the growing number of these applications, their manual analysis is often time-consuming and can be subject to error. Machine learning methods provide an effective solution for automating this process, which ultimately involves a classification task, i.e. the application is either accepted or denied. For this project, we will build a predictor which automates the credit card approval process via the machine learning methods of Logistic Regression, K-nearest neighbours (KNN) and Random Forest Models.
 
+## 0. Importing Packages
+We begin by importing the necessary Python libraries.
+```python
+# Math and Plotting libraries
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Machine Learning libraries
+from sklearn.compose import ColumnTransformer
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+```
+
+## 1. Importing the dataset
+This project utilises the [credit card approval dataset](https://archive.ics.uci.edu/dataset/27/credit+approval) imported from the UCI Machine Learning Repository which has been anonymised for confidentiality. We import the dataset as follows:
+```python
+# UC Irvine Machine Learning Repository
+from ucimlrepo import fetch_ucirepo
+# fetch dataset
+credit_approval = fetch_ucirepo(id=27)
+```
+Inspecting the type of ```credit_approval```, we see that it consists of 3 keys: 'features', 'targets', and 'original'.
+```python
+credit_approval.data.features.head()
+```
+```python
+   A15    A14 A13 A12  A11 A10 A9    A8 A7 A6 A5 A4     A3     A2 A1
+0    0  202.0   g   f    1   t  t  1.25  v  w  g  u  0.000  30.83  b
+1  560   43.0   g   f    6   t  t  3.04  h  q  g  u  4.460  58.67  a
+2  824  280.0   g   f    0   f  t  1.50  h  q  g  u  0.500  24.50  a
+3    3  100.0   g   t    5   t  t  3.75  v  w  g  u  1.540  27.83  b
+4    0  120.0   s   f    0   f  t  1.71  v  w  g  u  5.625  20.17  b
+```
+```python
+credit_approval.data.targets.head()
+```
+```python
+  A16
+0   +
+1   +
+2   +
+3   +
+4   +
+```
+```python
+credit_approval.data.original.head()
+```
+```python
+  A1     A2     A3 A4 A5 A6 A7    A8 A9 A10  A11 A12 A13    A14  A15 A16
+0  b  30.83  0.000  u  g  w  v  1.25  t   t    1   f   g  202.0    0   +
+1  a  58.67  4.460  u  g  q  h  3.04  t   t    6   f   g   43.0  560   +
+2  a  24.50  0.500  u  g  q  h  1.50  t   f    0   f   g  280.0  824   +
+3  b  27.83  1.540  u  g  w  v  3.75  t   t    5   t   g  100.0    3   +
+4  b  20.17  5.625  u  g  w  v  1.71  t   f    0   f   s  120.0    0   +
+```
+The dataset contains 690 rows with some missing values, with the 'original' key being composed of the columns from the 'features' and 'targets' keys. As such, we will use the 'original' key to perform an initial exploration of the data, whose attributes are:
+- A1: a, b
+- A2: continuous
+- A3: continuous
+- A4: u, y, l, t
+- A5: g, p, gg
+- A6: c, d, cc, i, j, k, m, r, q, w, x, e, aa, ff
+- A7: v, h, bb, j, n, z, dd, ff, o
+- A8: continuous
+- A9: t, f
+- A10: t, f
+- A11: continuous
+- A12: t, f
+- A13: g, p, s
+- A14: continuous
+- A15: continuous
+- A16: +,- (class)
+
+## 2. Inspecting the data
+Beginning our inspection of the data, we check the fields for those variables comprising the `credit_approval` dataframe.
+```python
+credit_approval.variables
+```
+```python
+   name     role         type demographic description units missing_values
+0   A16   Target  Categorical        None        None  None             no
+1   A15  Feature   Continuous        None        None  None             no
+2   A14  Feature   Continuous        None        None  None            yes
+3   A13  Feature  Categorical        None        None  None             no
+4   A12  Feature  Categorical        None        None  None             no
+5   A11  Feature   Continuous        None        None  None             no
+6   A10  Feature  Categorical        None        None  None             no
+7    A9  Feature  Categorical        None        None  None             no
+8    A8  Feature   Continuous        None        None  None             no
+9    A7  Feature  Categorical        None        None  None            yes
+10   A6  Feature  Categorical        None        None  None            yes
+11   A5  Feature  Categorical        None        None  None            yes
+12   A4  Feature  Categorical        None        None  None            yes
+13   A3  Feature   Continuous        None        None  None             no
+14   A2  Feature   Continuous        None        None  None            yes
+15   A1  Feature  Categorical        None        None  None            yes
+```
+To gain further understanding of the dataset, we check the information and summary statistics.
+```python
+credit_df = credit_approval.data.original
+credit_df.info()
+```
+```python
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 690 entries, 0 to 689
+Data columns (total 16 columns):
+ #   Column  Non-Null Count  Dtype  
+---  ------  --------------  -----  
+ 0   A1      678 non-null    object 
+ 1   A2      678 non-null    float64
+ 2   A3      690 non-null    float64
+ 3   A4      684 non-null    object 
+ 4   A5      684 non-null    object 
+ 5   A6      681 non-null    object 
+ 6   A7      681 non-null    object 
+ 7   A8      690 non-null    float64
+ 8   A9      690 non-null    object 
+ 9   A10     690 non-null    object 
+ 10  A11     690 non-null    int64  
+ 11  A12     690 non-null    object 
+ 12  A13     690 non-null    object 
+ 13  A14     677 non-null    float64
+ 14  A15     690 non-null    int64  
+ 15  A16     690 non-null    object 
+dtypes: float64(4), int64(2), object(10)
+memory usage: 86.4+ KB
+```
+```python
+credit_df.describe()
+```
+```python
+               A2          A3          A8        A11          A14            A15
+count  678.000000  690.000000  690.000000  690.00000   677.000000     690.000000  
+mean    31.568171    4.758725    2.223406    2.40000   184.014771    1017.385507  
+std     11.957862    4.978163    3.346513    4.86294   173.806768    5210.102598  
+min     13.750000    0.000000    0.000000    0.00000     0.000000       0.000000  
+25%     22.602500    1.000000    0.165000    0.00000    75.000000       0.000000  
+50%     28.460000    2.750000    1.000000    0.00000   160.000000       5.000000  
+75%     38.230000    7.207500    2.625000    3.00000   276.000000     395.500000  
+max     80.250000   28.000000   28.500000   67.00000  2000.000000  100000.000000
+```
+The above summary statistics have been limited to those columns with a numerical data type. Since machine learning (ML) algorithms require all feature variables to be of the numeric data type, we will need to apply some preprocessing to the data. Additionally, we see from the ```count``` field that the summary statistics for columns A2 and A14 do not include all 690 rows. Despite the previous ```.info()``` method returning datatypes for A2 and A14 as ```float64``` and ```int64``` respectively, this implies that some of their entries must be missing. This is confirmed by checking with the following,
+```python
+sum(credit_df.A2.isnull())
+```
+```python
+12
+```
+```python
+sum(credit_df.A14.isnull())
+```
+```python
+13
+```
+which reveals that columns A2 and A14 respectively contain 12 and 13 missing entries. Then limiting our summary statistics to columns A3, A8, A11 and A15, we have:
+```python
+credit_df[["A3","A8","A11","A15"]].describe()
+```
+```python
+               A3          A8        A11            A15
+count  690.000000  690.000000  690.00000     690.000000
+mean     4.758725    2.223406    2.40000    1017.385507
+std      4.978163    3.346513    4.86294    5210.102598
+min      0.000000    0.000000    0.00000       0.000000
+25%      1.000000    0.165000    0.00000       0.000000
+50%      2.750000    1.000000    0.00000       5.000000
+75%      7.207500    2.625000    3.00000     395.500000
+max     28.000000   28.500000   67.00000  100000.000000
+```
+To ensure the cost functions employed by the later ML models can correctly converge to a minimum, all feature variables will have to be scaled using different feature scaling techniques (such as standardisation, normalisation, min-max scaling, etc). This will be handled later in the project.
+
+## 3. Cleaning the data
+With the knowledge that the dataset contains ```nan``` entries, we inspect the distribution of missing values across all columns.
+```python
+credit_df.isna().sum()
+```
+```python
+A1     12
+A2     12
+A3      0
+A4      6
+A5      6
+A6      9
+A7      9
+A8      0
+A9      0
+A10     0
+A11     0
+A12     0
+A13     0
+A14    13
+A15     0
+A16     0
+dtype: int64
+```
+SOME COME FROM CATEGORICAL, SOME FROM NUMERICAL
+The fraction of missing values is quite low, so we will use imputation to replace them. All of the missing values belong to a categorical columns, so we will replace with the last valid value using panda's ffill function:
