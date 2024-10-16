@@ -177,7 +177,7 @@ min      0.000000    0.000000    0.00000       0.000000
 75%      7.207500    2.625000    3.00000     395.500000
 max     28.000000   28.500000   67.00000  100000.000000
 ```
-We also realise that the values in column A15 are several orders of magnitude greater than those of the other numerical columns. To ensure the cost functions in the later ML models can correctly converge to a minimum, feature scaling techniques will be applied later on.
+We also realise that the values in column A15 are several orders of magnitude greater than those of the other numerical columns. To ensure the cost functions of our chosen ML models can correctly converge to a minimum, feature scaling techniques will be applied later on.
 
 ## 3. Preprocessing the data
 Following our earlier inspection of the data, it is clearly necessary we preprocess the data before building our ML models. The preprocessing sequence can be broken down into the following tasks:
