@@ -149,7 +149,7 @@ min     13.750000    0.000000    0.000000    0.00000     0.000000       0.000000
 75%     38.230000    7.207500    2.625000    3.00000   276.000000     395.500000  
 max     80.250000   28.000000   28.500000   67.00000  2000.000000  100000.000000
 ```
-The above summary statistics have been limited to those columns with a numerical data type. Since machine learning (ML) algorithms require all feature variables to be of the numeric data type, we will need to apply some preprocessing to the data. Additionally, we see from the ```count``` field that the summary statistics for columns A2 and A14 do not include all 690 rows. Despite the previous ```.info()``` method returning datatypes for A2 and A14 as ```float64``` and ```int64``` respectively, this implies that some of their entries must be missing. This is confirmed by checking with the following,
+The above summary statistics have been automatically limited to those columns possessing a numerical data type. Furthermore, the ```count``` field reveals that columns A2 and A14 do not include all 690 rows of the dataset. Despite the previous ```.info()``` method returning datatypes for A2 and A14 as ```float64``` and ```int64``` respectively, this implies that some of their entries must be missing. This is confirmed by checking with the following,
 ```python
 sum(credit_df.A2.isnull())
 ```
@@ -177,10 +177,112 @@ min      0.000000    0.000000    0.00000       0.000000
 75%      7.207500    2.625000    3.00000     395.500000
 max     28.000000   28.500000   67.00000  100000.000000
 ```
-To ensure the cost functions employed by the later ML models can correctly converge to a minimum, all feature variables will have to be scaled using different feature scaling techniques (such as standardisation, normalisation, min-max scaling, etc). This will be handled later in the project.
+We also realise that the range values in column A15 are several orders of magnitude greater than the other numerical columns. To ensure the cost functions employed by the later ML models can correctly converge to a minimum, feature scaling techniques (such as standardisation, normalisation, min-max scaling, etc) must be applied to all feature variables later on.
 
-## 3. Cleaning the data
-With the knowledge that the dataset contains ```nan``` entries, we inspect the distribution of missing values across all columns.
+## 3. Preprocessing the data
+Following our earlier inspection of the data, it is clearly necessary we preprocess the data before building our ML models. The preprocessing sequence can be broken down into the following tasks:
+
+- Splitting the dataset into training and testing sets.
+- Imputing the missing data.
+- Converting non-numerical data to numerical.
+- Scaling the feature values to a uniform range.
+
+At this point of the preprocessing stage, we make two remarks: first, it is important to impute any missing information in both the training and testing datasets. Ignoring any missed values can negatively affect the performance of the predictive model, with some ML algorithms requiring a complete dataset for their successful operation (such as Logistic Regression). Second, we note how it is ideal to first split the data into the training and testing sets prior to imputing any missing data. This is due to what the training and testing datasets attempt to replicate in practice: the training dataset comprises historical information that is used to first build the predictive model, while the testing dataset serves as future unknown information which the model ingests to predict an outcome. In essence, the training dataset represents the past, with the testing dataset representing the future. Since the ML model is constructed solely from the training dataset, any preprocessing of the data, such as imputing missing values, should be performed on the training dataset alone. In other words, any imputation method applied to the training dataset should consider only those statistics of the training dataset. Then, if the testing dataset also requires imputation, its imputation method should follow that which was applied to the training dataset. This procedure ensures that no information from the testing data is used to preprocess the training data, which would bias the construction of the ML model and its ensuing results. This concept is referred to as 'data leakage', and will be handled accordingly in this project prior to constructing our ML models.
+
+### 3.1 Splitting the dataset into training and testing sets
+We begin the preprocessing by splitting the data into the training and testing sets that will be used by the future ML models.
+- Before splitting the data, we first begin with a small discussion regarding the technique of _feature selection_ as it pertains to this dataset.
+- In Section 1, the anonymised data contained within the ```credit_approval.data.original``` dataframe reveals very little about the nature of the features. However, [this](http://rstudio-pubs-static.s3.amazonaws.com/73039_9946de135c0a49daa7a0a9eda4a67a72.html) provides good insight to the features most typically used by banking institutions when considering credit card applications, such as Gender, Age, Debt, Married, BankCustomer, EducationLevel, Ethnicity, YearsEmployed, PriorDefault, Employed, CreditScore, DriversLicense, Citizen, ZipCode, Income and finally the ApprovalStatus.
+- Then with this knowledge in mind, we can determine with good confidence that the columns for the ```credit_approval.data.original``` dataframe map to the following features:
+  
+- A1: Gender
+- A2: Age
+- A3: Debt
+- A4: Marital status
+- A5: Bank customer type
+- A6: Education level
+- A7: Ethnicity
+- A8: Years of Employment
+- A9: Prior default
+- A10: Employment status
+- A11: Credit score
+- A12: Drivers license type
+- A13: Citizenship status
+- A14: Zipcode
+- A15: Income
+- A16: Approval status
+
+- With this improved understanding of the features comprising the dataframe, feature selection could be exercised. For instance, columns A12 and A14 could be dropped prior to splitting the dataset as drivers license type and zipcode could be deemed as relatively unimportant factors dictating the approval of a credit card application. This small-scale example of feature selection supports how good feature selection practices can facilitate ML modelling by reducing the number of overall features and the introduction of noise to the dataset; improving the performance, efficiency, and interpretability of the ML model.
+- In practice however, a more robust method for determining which features are relevant for inclusion would involve measuring the statistial correlation between said features and the target. Since this is beyond the scope of the project, we proceed by adopting the popular convention of splitting the dataframe into its nominal 'features' and 'targets' variables.
+```python
+y = credit_df['A16']
+Xfeatures = credit_df.drop(['A16'], axis = 1)
+```
+We then split the features and targets variables into their training and testing sets.
+```python
+# Import train_test_split
+from sklearn.model_selection import train_test_split
+
+Xtrain, Xtest, ytrain, ytest = train_test_split(Xfeatures, y, test_size = 0.33, random_state = 42)
+```
+
+### 3.2 Imputing the missing data
+- After splitting the data into its training and testing sets, we are now ready to perform data imputation. As ```nan``` values are used to indicate any missing data, we first inspect the distribution of ```nan``` values  across all columns of the training and test datasets.
+```python
+Xtrain.isna().sum()
+Xtest.isna().sum()
+```
+```python
+A1      8
+A2      5
+A3      0
+A4      6
+A5      6
+A6      7
+A7      7
+A8      0
+A9      0
+A10     0
+A11     0
+A12     0
+A13     0
+A14    12
+A15     0
+dtype: int64
+A1     4
+A2     7
+A3     0
+A4     0
+A5     0
+A6     2
+A7     2
+A8     0
+A9     0
+A10    0
+A11    0
+A12    0
+A13    0
+A14    1
+A15    0
+dtype: int64
+```
+- ```ytrain``` and ```ytest``` contain no missing values, and so do not require imputation. Only ```Xtrain``` and ```Xtest``` require imputation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------------------------------------------
+----------------------------------------------------
+----------------------------------------------------
 ```python
 credit_df.isna().sum()
 ```
@@ -203,5 +305,51 @@ A15     0
 A16     0
 dtype: int64
 ```
-SOME COME FROM CATEGORICAL, SOME FROM NUMERICAL
-The fraction of missing values is quite low, so we will use imputation to replace them. All of the missing values belong to a categorical columns, so we will replace with the last valid value using panda's ffill function:
+We see that the 67 total missing values correspond to approximately 0.61% of the complete dataset; a relatively low fraction. Before preprocessing the data, we will impute these missing entries according to the datatypes returned in Section 2. Therein, we saw that columns A1, A2, A4, A5, A6, A7, A14 assumed the following datatypes:
+- A1: Categorical
+- A2: Continuous
+- A4: Categorical
+- A5: Categorical
+- A6: Categorical
+- A7: Categorical
+- A14: Continuous
+
+For the categorical columns, we use the pandas ```ffill``` method to impute any missing value with the value from the previous row, while for the continuous columns, we replace any missing value with the mean of the non-missing values for that column:
+```python
+# Replace missing values in categorical columns with the value from its previous row
+credit_df['A1'] = credit_df['A1'].ffill()
+credit_df['A4'] = credit_df['A4'].ffill()
+credit_df['A5'] = credit_df['A5'].ffill()
+credit_df['A6'] = credit_df['A6'].ffill()
+credit_df['A7'] = credit_df['A7'].ffill()
+
+# Replace missing values in continuous columns with their column means
+credit_df['A2'] = credit_df['A2'].fillna(credit_df['A2'].mean())
+credit_df['A14'] = credit_df['A14'].fillna(credit_df['A14'].mean())
+```
+Checking if the imputation worked:
+```python
+credit_df.isna().sum()
+```
+```python
+A1     0
+A2     0
+A3     0
+A4     0
+A5     0
+A6     0
+A7     0
+A8     0
+A9     0
+A10    0
+A11    0
+A12    0
+A13    0
+A14    0
+A15    0
+A16    0
+dtype: int64
+```
+
+### 3.3 Converting non-numeric to numeric
+Since machine learning (ML) algorithms require all feature variables to be of the numeric data type, we will need to apply some preprocessing to the data.
