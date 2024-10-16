@@ -79,7 +79,7 @@ The dataset contains 690 rows with some missing values, with the 'original' key 
 - A13: g, p, s
 - A14: continuous
 - A15: continuous
-- A16: +,- (class)
+- A16: +, -
 
 ## 2. Inspecting the data
 Beginning our inspection of the data, we check the fields for those variables comprising the `credit_approval` dataframe.
