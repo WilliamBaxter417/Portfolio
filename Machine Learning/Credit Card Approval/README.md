@@ -177,7 +177,7 @@ min      0.000000    0.000000    0.00000       0.000000
 75%      7.207500    2.625000    3.00000     395.500000
 max     28.000000   28.500000   67.00000  100000.000000
 ```
-We also realise that the range values in column A15 are several orders of magnitude greater than the other numerical columns. To ensure the cost functions employed by the later ML models can correctly converge to a minimum, feature scaling techniques (such as standardisation, normalisation, min-max scaling, etc) must be applied to all feature variables later on.
+We also realise that the range values in column A15 are several orders of magnitude greater than the other numerical columns. To ensure the cost functions employed by the later ML models can correctly converge to a minimum, feature scaling techniques must be applied later on.
 
 ## 3. Preprocessing the data
 Following our earlier inspection of the data, it is clearly necessary we preprocess the data before building our ML models. The preprocessing sequence can be broken down into the following tasks:
@@ -187,11 +187,10 @@ Following our earlier inspection of the data, it is clearly necessary we preproc
 - Converting non-numerical data to numerical.
 - Scaling the feature values to a uniform range.
 
-At this point of the preprocessing stage, we make two remarks: first, it is important to impute any missing information in both the training and testing datasets. Ignoring any missed values can negatively affect the performance of the predictive model, with some ML algorithms requiring a complete dataset for their successful operation (such as Logistic Regression). Second, we note how it is ideal to first split the data into the training and testing datasets prior to imputing. This is due to what the training and testing datasets attempt to replicate in practice: the training dataset comprises historical information that is used to first build the predictive model, while the testing dataset serves as future unknown information which the model ingests to predict an outcome. In essence, the training dataset represents the past, with the testing dataset representing the future. Since the ML model is constructed solely from the training dataset, any preprocessing of the data, such as imputing missing values, should be performed on the training dataset alone. In other words, any imputation method applied to the training dataset should consider only those statistics of the training dataset. Then, if the testing dataset also requires imputing, its imputation method should follow that which was applied to the training dataset. This procedure ensures that no information from the testing data is used to preprocess the training data, which would bias the construction of the ML model and its ensuing results. This concept is referred to as 'data leakage', and will be handled accordingly in this project prior to constructing our ML models.
+At this point of the preprocessing stage, we make two remarks: first, it is important to impute any missing information in both the training and testing datasets. Ignoring any missed values can negatively affect the performance of the predictive model, with some ML algorithms requiring a complete dataset for their successful operation (such as Logistic Regression). Second, we note how it is ideal to first split the data into the training and testing datasets prior to imputing. This is due to what the training and testing datasets attempt to replicate in practice: the training dataset comprises historical information that is used to first build the predictive model, while the testing dataset serves as future unknown information which the model ingests to predict an outcome. In essence, the training dataset represents the past, with the testing dataset representing the future. Since the ML model is constructed solely from the training dataset, any preprocessing of the data, such as imputing missing values, should be performed on the training dataset alone. In other words, any imputation method applied to the training dataset should consider only those statistics of the training dataset. Then, if the testing dataset also requires imputing, its imputation method should follow that which was applied to the training dataset. This procedure ensures that no information from the testing data is used to preprocess the training data, which would bias the construction of the ML model and its ensuing results. This concept is referred to as 'data leakage', and will be handled accordingly in this project prior to constructing our ML models later on. Our justification for opting to impute the missing values instead of omitting those samples entirely will also be covered.
 
 ### 3.1 Splitting the dataset into training and testing sets
-We begin the preprocessing by splitting the data into the training and testing sets that will be used by the future ML models.
-- Before splitting the data, we first begin with a small discussion regarding the technique of _feature selection_ as it pertains to this dataset.
+- We first begin with a small discussion regarding the technique of _feature selection_ as it pertains to this dataset.
 - In Section 1, the anonymised data contained within the ```credit_approval.data.original``` dataframe reveals very little about the nature of the features. However, [this](http://rstudio-pubs-static.s3.amazonaws.com/73039_9946de135c0a49daa7a0a9eda4a67a72.html) provides good insight to the features most typically used by banking institutions when considering credit card applications, such as Gender, Age, Debt, Married, BankCustomer, EducationLevel, Ethnicity, YearsEmployed, PriorDefault, Employed, CreditScore, DriversLicense, Citizen, ZipCode, Income and finally the ApprovalStatus.
 - Then with this knowledge in mind, we can determine with good confidence that the columns for the ```credit_approval.data.original``` dataframe map to the following features:
   
@@ -227,7 +226,9 @@ Xtrain, Xtest, ytrain, ytest = train_test_split(Xfeatures, y, test_size = 0.33, 
 ```
 
 ### 3.2 Imputing the missing data
-- After splitting the data into its training and testing sets, we are now ready to perform data imputation. As ```nan``` values are used to indicate any missing data, we first inspect the distribution of ```nan``` values  across all columns of the training and test datasets.
+Before discussing methods of imputing missing values in the training and testing datasets, we elaborate on our aforementioned choice of imputing the missing values over omitting those samples as a whole. As the total number of samples (690) comprising the original dataset is already small, then omitting any entirely could detract from the performance of the ensuing ML model. On the other hand, as only approximately 0.61% of the available values are missing, one could argue on reasonable ground for their omission. However, conventional practice in most cases is to provide the predictive model with as much training data as possible so as to maximise support during the learning stage. Additionally, any remaining features from those samples containing missing values would still contribute towards fine-tuning the underlying ML algorithm and improving the robustness of its predictive modelling. In conjunction, the decision to remove outliers from any dataset is typically context dependent and is often left to the designer's discretion. Given how the features of this dataset most likely reflect those characteristics outlined in Section 3.1 (gender, age, debt, marital status, etc), we deem it appropriate to preserve any outliers and for their inclusion during the training and testing stages of the ML models.
+
+With these justifications in mind, we are now ready to perform data imputation on ```Xtrain``` and ```Xtest```. As ```nan``` values are used to indicate any missing data, we first inspect the distribution of ```nan``` values  across all columns of ```Xtrain``` and ```Xtest```.
 ```python
 Xtrain.isna().sum()
 Xtest.isna().sum()
@@ -266,10 +267,58 @@ A14    1
 A15    0
 dtype: int64
 ```
-- As ```ytrain``` and ```ytest``` contain no missing values, only ```Xtrain``` and ```Xtest``` require imputation.
-- Discuss imputation method for categorical and numerical data.
+As expected, the missing entries in ```Xtrain``` and ```Xtest``` occur in columns A1, A2, A4, A5, A6, A7 and A14, which assume the following datatypes (as obtained in Section 2):
 
+- A1: Categorical
+- A2: Continuous
+- A4: Categorical
+- A5: Categorical
+- A6: Categorical
+- A7: Categorical
+- A14: Continuous
 
+Since the missing data is either categorical or continuous in nature, we must implement separate imputation methods for them. Adopting conventional practice, we will apply the method of mean imputation to the continuous data (type ```float64```) and mode imputation to the categorical data (type ```O```). To facilitate this, we build the following subfunction, which takes a training and testing dataframe (in that order) and imputes them according to their data types.
+```python
+# Math libraries
+import numpy as np
+import pandas as pd
+
+## IMPUTES MISSING VALUES FOR TRAINING AND TESTING DATAFRAMES
+## INPUTS:
+### train_df: training dataframe
+### test_df: testing dataframe
+def impute_train_test(train_df, test_df):
+    # Training and testing datasets have same number of columns
+    for col in train_df.columns:
+        if train_df[col].dtypes == 'O':
+            # Find most frequent value of current column of train_df
+            f_hat = train_df[col].value_counts().index[0]
+            if train_df[col].isna().sum() != 0:
+                # Find row indices which contain NaN values of current column of train_df
+                idx = train_df[train_df[col].isna()].index
+                # Replace those rows with f_hat
+                train_df.loc[idx, col] = f_hat
+            if test_df[col].isna().sum() != 0:
+                # Find row indices which contain NaN values of current column of test_df
+                idx = test_df[test_df[col].isna()].index
+                # Replace those rows with f_hat
+                test_df.loc[idx, col] = f_hat
+
+        elif train_df[col].dtypes == 'float64':
+            # Find mean of current column of train_df
+            train_mean = train_df[col].mean()
+            if train_df[col].isna().sum() != 0:
+                # Find row indices which contain NaN values of current column of train_df
+                idx = train_df[train_df[col].isna()].index
+                # Replace those rows with train_mean
+                train_df.loc[idx, col] = train_mean
+            if test_df[col].isna().sum() != 0:
+                # Find row indices which contain NaN values of current column of test_df
+                idx = test_df[test_df[col].isna()].index
+                # Replace those rows with train_mean
+                test_df.loc[idx, col] = train_mean
+
+```
 
 
 
@@ -306,13 +355,7 @@ A16     0
 dtype: int64
 ```
 We see that the 67 total missing values correspond to approximately 0.61% of the complete dataset; a relatively low fraction. Before preprocessing the data, we will impute these missing entries according to the datatypes returned in Section 2. Therein, we saw that columns A1, A2, A4, A5, A6, A7, A14 assumed the following datatypes:
-- A1: Categorical
-- A2: Continuous
-- A4: Categorical
-- A5: Categorical
-- A6: Categorical
-- A7: Categorical
-- A14: Continuous
+
 
 For the categorical columns, we use the pandas ```ffill``` method to impute any missing value with the value from the previous row, while for the continuous columns, we replace any missing value with the mean of the non-missing values for that column:
 ```python
