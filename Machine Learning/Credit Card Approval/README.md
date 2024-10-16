@@ -149,7 +149,7 @@ min     13.750000    0.000000    0.000000    0.00000     0.000000       0.000000
 75%     38.230000    7.207500    2.625000    3.00000   276.000000     395.500000  
 max     80.250000   28.000000   28.500000   67.00000  2000.000000  100000.000000
 ```
-The above summary statistics have been automatically limited to those columns possessing a numerical data type. Furthermore, the ```count``` field reveals that columns A2 and A14 do not include all 690 rows of the dataset. Despite the previous ```.info()``` method returning datatypes for A2 and A14 as ```float64``` and ```int64``` respectively, this implies that some of their entries must be missing. This is confirmed by checking with the following,
+The above summary statistics have been automatically limited to those columns possessing a numerical data type. Furthermore, the ```count``` field reveals that columns A2 and A14 do not include all 690 rows of the dataset. As indicated by the ```missing_values``` column in the table returned by ```credit_approval.variables``` , this means that some entries from columns A2 and A14 are missing (along with columns A1, A4, A5, A6 and A7). This is quickly confirmed by counting the number of ```nan``` entries in A2 and A14:
 ```python
 sum(credit_df.A2.isnull())
 ```
@@ -162,7 +162,7 @@ sum(credit_df.A14.isnull())
 ```python
 13
 ```
-which reveals that columns A2 and A14 respectively contain 12 and 13 missing entries. Then limiting our summary statistics to columns A3, A8, A11 and A15, we have:
+Then limiting our summary statistics to columns A3, A8, A11 and A15, we have:
 ```python
 credit_df[["A3","A8","A11","A15"]].describe()
 ```
@@ -177,7 +177,7 @@ min      0.000000    0.000000    0.00000       0.000000
 75%      7.207500    2.625000    3.00000     395.500000
 max     28.000000   28.500000   67.00000  100000.000000
 ```
-We also realise that the range values in column A15 are several orders of magnitude greater than the other numerical columns. To ensure the cost functions employed by the later ML models can correctly converge to a minimum, feature scaling techniques must be applied later on.
+We also realise that the values in column A15 are several orders of magnitude greater than those of the other numerical columns. To ensure the cost functions in the later ML models can correctly converge to a minimum, feature scaling techniques will be applied later on.
 
 ## 3. Preprocessing the data
 Following our earlier inspection of the data, it is clearly necessary we preprocess the data before building our ML models. The preprocessing sequence can be broken down into the following tasks:
