@@ -319,60 +319,13 @@ def impute_train_test(train_df, test_df):
                 test_df.loc[idx, col] = train_mean
 
 ```
-
-
-
-
-
-
-
-
-
-
-----------------------------------------------------
-----------------------------------------------------
-----------------------------------------------------
+Input ```Xtrain``` and ```Xtest``` to this function (contained in ```CCASubs.py```) and verify that they contain no missing values.
 ```python
-credit_df.isna().sum()
-```
-```python
-A1     12
-A2     12
-A3      0
-A4      6
-A5      6
-A6      9
-A7      9
-A8      0
-A9      0
-A10     0
-A11     0
-A12     0
-A13     0
-A14    13
-A15     0
-A16     0
-dtype: int64
-```
-We see that the 67 total missing values correspond to approximately 0.61% of the complete dataset; a relatively low fraction. Before preprocessing the data, we will impute these missing entries according to the datatypes returned in Section 2. Therein, we saw that columns A1, A2, A4, A5, A6, A7, A14 assumed the following datatypes:
+import CCASubs
 
-
-For the categorical columns, we use the pandas ```ffill``` method to impute any missing value with the value from the previous row, while for the continuous columns, we replace any missing value with the mean of the non-missing values for that column:
-```python
-# Replace missing values in categorical columns with the value from its previous row
-credit_df['A1'] = credit_df['A1'].ffill()
-credit_df['A4'] = credit_df['A4'].ffill()
-credit_df['A5'] = credit_df['A5'].ffill()
-credit_df['A6'] = credit_df['A6'].ffill()
-credit_df['A7'] = credit_df['A7'].ffill()
-
-# Replace missing values in continuous columns with their column means
-credit_df['A2'] = credit_df['A2'].fillna(credit_df['A2'].mean())
-credit_df['A14'] = credit_df['A14'].fillna(credit_df['A14'].mean())
-```
-Checking if the imputation worked:
-```python
-credit_df.isna().sum()
+CCASubs.impute_train_test(Xtrain, Xtest)
+Xtrain.isna().sum()
+Xtest.isna().sum()
 ```
 ```python
 A1     0
@@ -390,9 +343,26 @@ A12    0
 A13    0
 A14    0
 A15    0
-A16    0
+dtype: int64
+A1     0
+A2     0
+A3     0
+A4     0
+A5     0
+A6     0
+A7     0
+A8     0
+A9     0
+A10    0
+A11    0
+A12    0
+A13    0
+A14    0
+A15    0
 dtype: int64
 ```
+
+
 
 ### 3.3 Converting non-numeric to numeric
 Since machine learning (ML) algorithms require all feature variables to be of the numeric data type, we will need to apply some preprocessing to the data.
