@@ -216,9 +216,7 @@ Xfeatures = credit_df.drop(['A16'], axis = 1)
 ```
 We then split the features and targets variables into their training and testing sets.
 ```python
-# Import train_test_split
-from sklearn.model_selection import train_test_split
-
+# Split Xfeatures into training and testing sets
 Xtrain, Xtest, ytrain, ytest = train_test_split(Xfeatures, y, test_size = 0.33, random_state = 42)
 ```
 
@@ -318,10 +316,14 @@ def impute_train_test(train_df, test_df):
 ```
 Input ```Xtrain``` and ```Xtest``` to this function (contained in ```CCASubs.py```) and verify that they contain no missing values.
 ```python
+# Import module containing the impute_train_test function
 import CCASubs
 
+# Impute Xtrain and Xtest using the impute_train_test function
 CCASubs.impute_train_test(Xtrain, Xtest)
+# Count number of nan entries in Xtrain
 Xtrain.isna().sum()
+# Count number of nan entries in Xtest
 Xtest.isna().sum()
 ```
 ```python
