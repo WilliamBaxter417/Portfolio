@@ -221,7 +221,7 @@ Xtrain, Xtest, ytrain, ytest = train_test_split(Xfeatures, y, test_size = 0.33, 
 ```
 
 ### 3.2 Imputing the missing data
-Before discussing methods of imputing missing values in the training and testing datasets, we elaborate on our aforementioned choice of imputing the missing values over omitting those samples as a whole. As the total number of samples (690) comprising the original dataset is already small, then omitting any entirely could detract from the performance of the ensuing ML model. On the other hand, as only approximately 0.61% of the available values are missing, one could argue on reasonable grounds for their omission. However, conventional practice in most cases is to provide the predictive model with as much training data as possible so as to maximise support during the learning stage. Additionally, any remaining features from those samples containing missing values would still contribute towards fine-tuning the underlying ML algorithm and improving the robustness of its predictive modelling. In conjunction, the decision to remove outliers from any dataset is typically context dependent and is often left to the designer's discretion. Before imputing any missing data, we perform a preliminary exploration of the ```Xfeatures``` dataframe and generate histograms for the numerical features. To generalise our implementation for scalability, we develop a function to extract the column header names for those categorical and numerical features.
+Before discussing methods of imputing missing values in the training and testing datasets, we elaborate on our aforementioned choice of imputing the missing values over omitting those samples as a whole. As the total number of samples (690) comprising the original dataset is already small, then omitting any entirely could detract from the performance of the ensuing ML model. On the other hand, as only approximately 0.61% of the available values are missing, one could argue on reasonable grounds for their omission. However, conventional practice in most cases is to provide the predictive model with as much training data as possible so as to maximise support during the learning stage. Additionally, any remaining features from those samples containing missing values would still contribute towards fine-tuning the underlying ML algorithm and improving the robustness of its predictive modelling. In conjunction, the decision to remove outliers from any dataset is typically context dependent and is often left to the designer's discretion. Before imputing any missing data, we perform a preliminary exploration of the ```Xfeatures``` dataframe and generate histograms for the numerical features. To generalise our implementation for scalability, we generate a new module called ```CCASubs``` and within it, develop a function to automatically extract the column header names for those categorical and numerical features.
 ```python
 ## EXTRACTS HEADER NAMES OF CATEGORICAL AND NUMERICAL COLUMNS IN DATAFRAME
 ## INPUTS:
@@ -250,13 +250,37 @@ def get_categorical_numerical_headers(df):
 
     return obj_col, num_col
 ```
-Import the ```CCASubs``` module containing the ```get_categorical_numerical_headers()``` function, and extract the headers for the categorical and numerical features from ```Xfeatures```.
+Importing the ```CCASubs``` module containing the ```get_categorical_numerical_headers()``` function, we extract the header names for the categorical and numerical features from ```Xfeatures```.
 ```python
 # Import module containing the impute_train_test function
 import CCASubs
 
 # Get header names for the categorical and numerical columns
 cat_cols, num_cols = CCASubs.get_categorical_numerical_headers(Xfeatures)
+```
+Since the concept of 'outliers' does not meaningfully apply to categorical data, we inspect the histograms pertaining to the numerical features.
+```python
+## GENERATE HISTOGRAM OF NUMERICAL FEATURES BEFORE IMPUTING
+# Configure backend for interactive mode
+matplotlib.use('TkAgg')
+# Initialise (2 x 3) axes for subplot of histograms (there are 6 numerical features)
+sp_row = 2
+sp_col = 3
+# Reshape num_cols for convenient indexing later on
+num_col_reshape = np.reshape(num_cols, (sp_row, sp_col))
+# Set number of bins to be the square root of the total number of samples
+num_samples = Xfeatures.shape[0]
+num_bins = int(np.ceil(np.sqrt(num_samples)))
+# Instantiate subplot from matplotlib.pyplot
+fig, axs = plt.subplots(sp_row, sp_col)
+# Iterate over rows of subplot
+for i in np.arange(sp_row):
+    # Iterate over columns of subplot
+    for j in np.arange(sp_col):
+        # Plot histogram for corresponding column index of Xfeature dataframe
+        axs[i,j].hist(Xfeatures[num_col_reshape[i,j]], bins = num_bins, edgecolor = 'black', linewidth = 1.2)
+        axs[i,j].set_xlabel(num_col_reshape[i,j], fontsize = 10)
+        axs[i,j].set_ylabel('Frequency')
 ```
 
 
