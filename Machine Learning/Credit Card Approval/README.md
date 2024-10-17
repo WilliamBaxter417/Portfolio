@@ -243,10 +243,10 @@ def get_categorical_numerical_headers(df):
     num_col = [''] * num_idx.shape[0]
     for i in np.arange(obj_idx.shape[0]):
         # Generate headers with string arithmetic and type conversion
-        obj_col[i] = 'A' + str(obj_idx[i]+1)
+        obj_col[i] = 'A' + str(obj_idx[i] + 1)
     for i in np.arange(num_idx.shape[0]):
         # Generate headers with string arithmetic and type conversion
-        num_col[i] = 'A' + str(num_idx[i]+1)
+        num_col[i] = 'A' + str(num_idx[i] + 1)
 
     return obj_col, num_col
 ```
