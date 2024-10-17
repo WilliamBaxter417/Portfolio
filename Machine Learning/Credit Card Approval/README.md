@@ -221,7 +221,46 @@ Xtrain, Xtest, ytrain, ytest = train_test_split(Xfeatures, y, test_size = 0.33, 
 ```
 
 ### 3.2 Imputing the missing data
-Before discussing methods of imputing missing values in the training and testing datasets, we elaborate on our aforementioned choice of imputing the missing values over omitting those samples as a whole. As the total number of samples (690) comprising the original dataset is already small, then omitting any entirely could detract from the performance of the ensuing ML model. On the other hand, as only approximately 0.61% of the available values are missing, one could argue on reasonable grounds for their omission. However, conventional practice in most cases is to provide the predictive model with as much training data as possible so as to maximise support during the learning stage. Additionally, any remaining features from those samples containing missing values would still contribute towards fine-tuning the underlying ML algorithm and improving the robustness of its predictive modelling. In conjunction, the decision to remove outliers from any dataset is typically context dependent and is often left to the designer's discretion. Given how the features of this dataset most likely reflect those characteristics outlined in Section 3.1 (gender, age, debt, marital status, etc), we deem it appropriate to preserve any outliers and for their inclusion during the training and testing stages of the ML models.
+Before discussing methods of imputing missing values in the training and testing datasets, we elaborate on our aforementioned choice of imputing the missing values over omitting those samples as a whole. As the total number of samples (690) comprising the original dataset is already small, then omitting any entirely could detract from the performance of the ensuing ML model. On the other hand, as only approximately 0.61% of the available values are missing, one could argue on reasonable grounds for their omission. However, conventional practice in most cases is to provide the predictive model with as much training data as possible so as to maximise support during the learning stage. Additionally, any remaining features from those samples containing missing values would still contribute towards fine-tuning the underlying ML algorithm and improving the robustness of its predictive modelling. In conjunction, the decision to remove outliers from any dataset is typically context dependent and is often left to the designer's discretion. Before imputing any missing data, we perform a preliminary exploration of the ```Xfeatures``` dataframe and generate histograms for the numerical features. To generalise our implementation for scalability, we develop a function to extract the column header names for those categorical and numerical features.
+```python
+## EXTRACTS HEADER NAMES OF CATEGORICAL AND NUMERICAL COLUMNS IN DATAFRAME
+## INPUTS:
+### df: dataframe
+## OUTPUTS:
+### obj_col: array of header names for the categorical columns
+### num_col: array of header names for the numerical columns
+def get_categorical_numerical_headers(df):
+    # Identify categorical columns (these will be type 'O')
+    obj_bool = (df.dtypes == 'O')
+    # Identify numerical columns (these will be 'float64' or 'int64')
+    num_bool = (df.dtypes != 'O')
+    # Find index values of categorical columns
+    obj_idx = np.where(obj_bool)[0]
+    # Find index values of numerical columns
+    num_idx = np.where(num_bool)[0]
+    # Initialise array of strings to store categorical and numerical header names
+    obj_col = [''] * obj_idx.shape[0]
+    num_col = [''] * num_idx.shape[0]
+    for i in np.arange(obj_idx.shape[0]):
+        # Generate headers with string arithmetic and type conversion
+        obj_col[i] = 'A' + str(obj_idx[i]+1)
+    for i in np.arange(num_idx.shape[0]):
+        # Generate headers with string arithmetic and type conversion
+        num_col[i] = 'A' + str(num_idx[i]+1)
+
+    return obj_col, num_col
+```
+Import the ```CCASubs``` module containing the ```get_categorical_numerical_headers()``` function, and extract the headers for the categorical and numerical features from ```Xfeatures```.
+```python
+# Import module containing the impute_train_test function
+import CCASubs
+
+# Get header names for the categorical and numerical columns
+cat_cols, num_cols = CCASubs.get_categorical_numerical_headers(Xfeatures)
+```
+
+
+Given how the features of this dataset most likely reflect those characteristics outlined in Section 3.1 (gender, age, debt, marital status, etc), we can intuit that any outliers would be "true" outliers; safely assuming they are not representative of any measurement or processing errors, data entry or poor sampling. Thus, we deem it appropriate to preserve any outliers and for their inclusion during the training and testing stages of the ML models.
 
 With these justifications in mind, we are now ready to perform data imputation on ```Xtrain``` and ```Xtest```. As ```nan``` values are used to indicate any missing data, we first inspect the distribution of ```nan``` values  across all columns of ```Xtrain``` and ```Xtest```.
 ```python
@@ -274,10 +313,6 @@ As expected, the missing entries in ```Xtrain``` and ```Xtest``` occur in column
 
 Since the missing data is either categorical or continuous in nature, we must implement separate imputation methods for them. Adopting conventional practice, we will apply the methods of mean imputation to the continuous data (type ```float64```) and mode imputation to the categorical data (type ```O```). To facilitate this, we build the following function which takes a training and testing dataframe (in that order) and imputes them according to their data types.
 ```python
-# Math libraries
-import numpy as np
-import pandas as pd
-
 ## IMPUTES MISSING VALUES FOR TRAINING AND TESTING DATAFRAMES
 ## INPUTS:
 ### train_df: training dataframe
@@ -316,9 +351,6 @@ def impute_train_test(train_df, test_df):
 ```
 Input ```Xtrain``` and ```Xtest``` to this function (contained in ```CCASubs.py```) and verify that they contain no missing values.
 ```python
-# Import module containing the impute_train_test function
-import CCASubs
-
 # Impute Xtrain and Xtest using the impute_train_test function
 CCASubs.impute_train_test(Xtrain, Xtest)
 # Count number of nan entries in Xtrain
@@ -362,4 +394,107 @@ dtype: int64
 ```
 
 ### 3.3 Converting non-numerical data
-Since machine learning (ML) algorithms require all feature variables to be of the numeric data type, we will need to apply some preprocessing to the data.
+We now proceed to convert the categorical feature variables into numerical data types. This task is necessary as many ML models require the data to be strictly numerical in type, with this conversion also resulting in faster computation. To achieve this, we utilise the ```OrdinalEncoder()``` routine from the ```sklearn.preprocessing``` library to encode the categorical features into integer arrays. We note how similarly to before, this task is executed after the data has been split into its training and testing sets so as to circumvent data leakage. If the data were to be encoded before splitting, the model would be effectively informed a priori of the labels composing the future data and would lead to it overfitting during the testing phase. Additionally, the encoding model should first be fitted using only the data from the training set before being applied to both the training and testing sets to effect the transformation.
+
+- For scalability, we write a function to automate the process of extracting the header names for the categorical features.
+```python
+## EXTRACTS HEADER NAMES OF CATEGORICAL COLUMNS IN DATAFRAME
+## INPUTS:
+### df: dataframe
+## OUTPUTS:
+### obj_col: array of names of categorical columns
+def get_categorical_col_names(df):
+    # Identify columns of data type object ('O')
+    obj_bool = (df.dtypes == 'O')
+    # Find index values of categorical columns
+    obj_idx = np.where(obj_bool)[0]
+    # Initialise empty array of strings to store header names
+    obj_col = [''] * obj_idx.shape[0]
+    for i in np.arange(obj_idx.shape[0]):
+        # Generate headers with string arithmetic and type conversion
+        obj_col[i] = 'A' + str(obj_idx[i]+1)
+
+    return obj_col
+```
+Check that the function correctly returns all categorical features and list them.
+```python
+# Get header names for the categorical columns
+cat_cols = CCASubs.get_categorical_col_names(Xfeatures)
+# Check categorical columns for Xtrain and Xtest
+print('Xtrain (categorical columns):\n')
+print(Xtrain[cat_cols])
+print('\n')
+print('Xtest (categorical columns):\n')
+print(Xtest[cat_cols])
+```
+```python
+Xtrain (categorical columns):
+    A1 A4 A5  A6  A7 A9 A10 A12 A13
+382  a  y  p   i  bb  f   f   f   g
+137  b  u  g   m   v  t   t   f   g
+346  b  u  g   c   v  f   f   t   g
+326  b  y  p   c   v  f   f   f   g
+33   a  u  g   e   v  t   f   t   g
+..  .. .. ..  ..  .. ..  ..  ..  ..
+71   b  u  g   d  bb  t   f   t   g
+106  b  u  g   k   v  t   f   f   s
+270  b  u  g   c   v  f   f   f   p
+435  b  y  p  ff  ff  f   t   f   g
+102  b  u  g   q   v  t   t   f   g
+[462 rows x 9 columns]
+
+Xtest (categorical columns):
+    A1 A4 A5  A6  A7 A9 A10 A12 A13
+286  a  u  g  ff  ff  f   t   t   g
+511  a  u  g   j   j  t   f   f   g
+257  b  u  g   d   v  f   f   f   g
+336  b  u  g   c   v  f   f   t   g
+318  b  y  p   m  bb  f   f   t   s
+..  .. .. ..  ..  .. ..  ..  ..  ..
+375  a  y  p   e  dd  f   f   f   g
+234  a  u  g   i  bb  t   t   f   g
+644  b  y  p   w   v  f   f   t   g
+271  b  u  g   c   v  f   f   t   g
+311  b  y  p   c   v  f   f   t   g
+[228 rows x 9 columns]
+```
+Verify the results of the ordinal encoder.
+```python
+# Verify results of the ordinal encoder
+print('Xtrain (encoded):\n')
+print(Xtrain)
+print('\n')
+print('Xtest (encoded):\n')
+print(Xtest)
+```
+```python
+Xtrain (encoded):
+      A1     A2     A3   A4   A5    A6  ...  A10  A11  A12  A13         A14   A15
+382  0.0  24.33  2.500  2.0  2.0   6.0  ...  0.0    0  0.0  0.0  200.000000   456
+137  1.0  33.58  2.750  1.0  0.0   9.0  ...  1.0    6  0.0  0.0  204.000000     0
+346  1.0  32.25  1.500  1.0  0.0   1.0  ...  0.0    0  1.0  0.0  372.000000   122
+326  1.0  30.17  1.085  2.0  2.0   1.0  ...  0.0    0  0.0  0.0  170.000000   179
+33   0.0  36.75  5.125  1.0  0.0   4.0  ...  0.0    0  1.0  0.0    0.000000  4000
+..   ...    ...    ...  ...  ...   ...  ...  ...  ...  ...  ...         ...   ...
+71   1.0  34.83  4.000  1.0  0.0   3.0  ...  0.0    0  1.0  0.0  177.275556     0
+106  1.0  28.75  1.165  1.0  0.0   8.0  ...  0.0    0  0.0  2.0  280.000000     0
+270  1.0  37.58  0.000  1.0  0.0   1.0  ...  0.0    0  0.0  1.0  177.275556     0
+435  1.0  19.00  0.000  2.0  2.0   5.0  ...  1.0    4  0.0  0.0   45.000000     1
+102  1.0  18.67  5.000  1.0  0.0  10.0  ...  1.0    2  0.0  0.0    0.000000    38
+[462 rows x 15 columns]
+
+Xtest (encoded):
+      A1         A2     A3   A4   A5    A6  ...  A10  A11  A12  A13    A14   A15
+286  0.0  31.635755   1.50  1.0  0.0   5.0  ...  1.0    2  1.0  0.0  200.0   105
+511  0.0  46.000000   4.00  1.0  0.0   7.0  ...  0.0    0  0.0  0.0  100.0   960
+257  1.0  20.000000   0.00  1.0  0.0   3.0  ...  0.0    0  0.0  0.0  144.0     0
+336  1.0  47.330000   6.50  1.0  0.0   1.0  ...  0.0    0  1.0  0.0    0.0   228
+318  1.0  19.170000   0.00  2.0  2.0   9.0  ...  0.0    0  1.0  2.0  500.0     1
+..   ...        ...    ...  ...  ...   ...  ...  ...  ...  ...  ...    ...   ...
+375  0.0  20.830000   0.50  2.0  2.0   4.0  ...  0.0    0  0.0  0.0  260.0     0
+234  0.0  58.420000  21.00  1.0  0.0   6.0  ...  1.0   13  0.0  0.0    0.0  6700
+644  1.0  36.170000   0.42  2.0  2.0  12.0  ...  0.0    0  1.0  0.0  309.0     2
+271  1.0  32.330000   2.50  1.0  0.0   1.0  ...  0.0    0  1.0  0.0  280.0     0
+311  1.0  19.000000   1.75  2.0  2.0   1.0  ...  0.0    0  1.0  0.0  112.0     6
+[228 rows x 15 columns]
+```
