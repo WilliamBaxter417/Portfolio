@@ -258,7 +258,7 @@ import CCASubs
 # Get header names for the categorical and numerical columns
 cat_cols, num_cols = CCASubs.get_categorical_numerical_headers(Xfeatures)
 ```
-Since the concept of 'outliers' does not meaningfully apply to categorical data, we inspect the histograms pertaining to the numerical features.
+Since it is not meaningful to determine 'outliers' in the context of categorical data, we inspect the histograms pertaining to the numerical features.
 ```python
 ## GENERATE HISTOGRAM OF NUMERICAL FEATURES BEFORE IMPUTING
 # Configure backend for interactive mode
