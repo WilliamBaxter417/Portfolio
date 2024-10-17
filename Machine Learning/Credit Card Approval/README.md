@@ -283,6 +283,7 @@ for i in np.arange(sp_row):
         axs[i,j].set_ylabel('Frequency')
 ```
 
+![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_numerical_features_before_imputing.png)
 
 Given how the features of this dataset most likely reflect those characteristics outlined in Section 3.1 (gender, age, debt, marital status, etc), we can intuit that any outliers would be "true" outliers; safely assuming they are not representative of any measurement or processing errors, data entry or poor sampling. Thus, we deem it appropriate to preserve any outliers and for their inclusion during the training and testing stages of the ML models.
 
