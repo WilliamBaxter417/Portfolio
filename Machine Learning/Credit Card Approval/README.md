@@ -211,7 +211,9 @@ We first begin with a small discussion regarding the technique of _feature selec
 
 With the nature of the dataset becoming more apparent, feature selection could be exercised. For instance, columns A12 and A14 could be dropped prior to splitting the dataset, as drivers license type and zipcode could be declared as relatively minor factors compared to the other characteristics when deciding the approval of a credit card application. This small-scale example of feature selection supports how good feature selection practices can facilitate ML modelling by reducing the number of overall features and the introduction of noise to the dataset; improving the performance, efficiency, and interpretability of the ML model. In practice however, a more robust method for determining which features are relevant for inclusion would involve measuring the statistical correlation between the available features along with the targets. Since this is beyond the scope of the project, we proceed by adopting the popular convention of splitting the dataframe into its nominal 'features' and 'targets' variables.
 ```python
+# Extract targets
 y = credit_df['A16']
+# Extract features
 Xfeatures = credit_df.drop(['A16'], axis = 1)
 ```
 We then split the features and targets variables into their training and testing sets.
