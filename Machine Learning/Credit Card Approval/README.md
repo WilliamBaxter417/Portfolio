@@ -81,8 +81,8 @@ The dataset contains 690 rows with some missing values, with the 'original' key 
 - A15: continuous
 - A16: +, -
 
-## 2. Inspecting the data
-Beginning our inspection of the data, we check the fields for those variables comprising the `credit_approval` dataframe.
+## 2. Data Exploration
+Beginning exploring our data, we check the fields for those variables comprising the `credit_approval` dataframe.
 ```python
 credit_approval.variables
 ```
@@ -105,9 +105,11 @@ credit_approval.variables
 14   A2  Feature   Continuous        None        None  None            yes
 15   A1  Feature  Categorical        None        None  None            yes
 ```
-To gain further understanding of the dataset, we check the information and summary statistics.
+To gain further understanding of the dataset, we check the information and summary statistics by first making the following assignment:
 ```python
+# Assign '.original' dataframe to credit_df
 credit_df = credit_approval.data.original
+# Check information
 credit_df.info()
 ```
 ```python
@@ -136,6 +138,7 @@ dtypes: float64(4), int64(2), object(10)
 memory usage: 86.4+ KB
 ```
 ```python
+# Check summary statistics
 credit_df.describe()
 ```
 ```python
@@ -149,14 +152,16 @@ min     13.750000    0.000000    0.000000    0.00000     0.000000       0.000000
 75%     38.230000    7.207500    2.625000    3.00000   276.000000     395.500000  
 max     80.250000   28.000000   28.500000   67.00000  2000.000000  100000.000000
 ```
-The above summary statistics have been automatically limited to those columns possessing a numerical data type. Furthermore, the ```count``` field reveals that columns A2 and A14 do not include all 690 rows of the dataset. As indicated by the ```missing_values``` column in the table returned by ```credit_approval.variables``` , this means that some entries from columns A2 and A14 are missing (along with columns A1, A4, A5, A6 and A7). This is quickly confirmed by counting the number of ```nan``` entries in A2 and A14:
+The above summary statistics have been automatically limited to those columns pertaining to numerical features. Furthermore, the ```count``` field reveals that columns A2 and A14 do not include all 690 rows of the dataset. As indicated by the ```missing_values``` column in the table returned by ```credit_approval.variables``` , this means that some entries from columns A2 and A14 are missing (along with columns A1, A4, A5, A6 and A7). This is quickly confirmed by counting the number of ```nan``` entries in A2 and A14:
 ```python
+# Counter number of nan entries in 'A2'
 sum(credit_df.A2.isnull())
 ```
 ```python
 12
 ```
 ```python
+# Counter number of nan entries in 'A14'
 sum(credit_df.A14.isnull())
 ```
 ```python
@@ -164,7 +169,8 @@ sum(credit_df.A14.isnull())
 ```
 Then limiting our summary statistics to columns A3, A8, A11 and A15, we have:
 ```python
-credit_df[["A3","A8","A11","A15"]].describe()
+# Check summary statistics for A3, A8, A11 and A15
+credit_df[['A3','A8','A11','A15']].describe()
 ```
 ```python
                A3          A8        A11            A15
@@ -177,53 +183,16 @@ min      0.000000    0.000000    0.00000       0.000000
 75%      7.207500    2.625000    3.00000     395.500000
 max     28.000000   28.500000   67.00000  100000.000000
 ```
-We also realise that the values in column A15 are several orders of magnitude greater than those of the other numerical columns. To ensure the cost functions of our chosen ML models can correctly converge to a minimum, feature scaling techniques will be applied later on.
+We also realise that the values in column A15 are several orders of magnitude greater than those of the other numerical columns, suggesting we eventually apply feature scaling techniques to the data. This will be addressed in further detail later on in the project.
 
-## 3. Preprocessing the data
-Following our earlier inspection of the data, it is clearly necessary we preprocess the data before building our ML models. The preprocessing sequence can be broken down into the following tasks:
-
-- Splitting the dataset into training and testing sets.
-- Imputing the missing data.
-- Converting non-numerical data.
-- Scaling the feature values.
-
-At this point of the preprocessing stage, we make two remarks: first, it is important to impute any missing information in both the training and testing datasets. Ignoring any missed values can negatively affect the performance of the predictive model, with some ML algorithms requiring a complete dataset for their successful operation (such as Logistic Regression). Second, we note how it is ideal to first split the data into the training and testing datasets prior to imputing. This is due to what the training and testing datasets attempt to replicate in practice: the training dataset comprises historical information that is used to first build the predictive model, while the testing dataset serves as future unknown information which the model ingests to predict an outcome. In essence, the training dataset represents the past, with the testing dataset representing the future. Since the ML model is constructed solely from the training dataset, any preprocessing of the data, such as imputing missing values, should be performed on the training dataset alone. In other words, any imputation method applied to the training dataset should consider only those statistics of the training dataset. Then, if the testing dataset also requires imputing, its imputation method should follow that which was applied to the training dataset. This procedure ensures that no information from the testing data is used to preprocess the training data, which would bias the construction of the ML model and its ensuing results. This concept is referred to as 'data leakage', and will be handled accordingly in this project prior to constructing our ML models later on. Our justification for opting to impute the missing values instead of omitting those samples entirely will also be covered.
-
-### 3.1 Splitting the dataset into training and testing sets
-We first begin with a small discussion regarding the technique of _feature selection_ as it pertains to this dataset. In Section 1, the anonymised data contained within the ```credit_approval.data.original``` dataframe reveals very little about the nature of the features. However, [this resource](http://rstudio-pubs-static.s3.amazonaws.com/73039_9946de135c0a49daa7a0a9eda4a67a72.html) provides insight to those characteristics typically employed by banking institutions when considering credit card applications. Following from this, we can determine with good confidence that the features of the ```credit_approval.data.original``` dataframe map to the following characteristics:
-  
-- A1: Gender
-- A2: Age
-- A3: Debt
-- A4: Marital status
-- A5: Bank customer type
-- A6: Education level
-- A7: Ethnicity
-- A8: Years of Employment
-- A9: Prior default
-- A10: Employment status
-- A11: Credit score
-- A12: Drivers license type
-- A13: Citizenship status
-- A14: Zipcode
-- A15: Income
-- A16: Approval status
-
-With the nature of the dataset becoming more apparent, feature selection could be exercised. For instance, columns A12 and A14 could be dropped prior to splitting the dataset, as drivers license type and zipcode could be declared as relatively minor factors compared to the other characteristics when deciding the approval of a credit card application. This small-scale example of feature selection supports how good feature selection practices can facilitate ML modelling by reducing the number of overall features and the introduction of noise to the dataset; improving the performance, efficiency, and interpretability of the ML model. In practice however, a more robust method for determining which features are relevant for inclusion would involve measuring the statistical correlation between the available features along with the targets. Since this is beyond the scope of the project, we proceed by adopting the popular convention of splitting the dataframe into its nominal 'features' and 'targets' variables.
+We now generate the boxplots corresponding to features A3, A8, A11 and A15 in order to visually aid the summary statistics generated above. Moreover, this enables us to observe any outliers within the numerical features of the dataset, which is a significant task when intrepreting the dataset and staging it for preprocessing. Before doing so however, we quickly discuss the two main approaches towards the management of outliers and their underlying caveats. The first approach involves removing any outliers before splitting the data into its training and testing sets. This ensures consistency throughout the entire dataset as their removal would adjust the means and variances of the numerical features (thereby affecting any imputation methods applied later on). While their exclusion would positively influence the construction of the ML model, we can no longer assess its performance when exposed to anomalous values that may simulate certain scenarios in practice. Meanwhile, the second approach involves removing any outliers after splitting the data. In this case, outliers are removed only from the training set in order to reduce any skewed analyses or inaccuracies in the model, while those within the testing set are preserved to give better insight to their effect on its performance. In this approach however, the means and variances corresponding to the training set may not accurately reflect what could otherwise be considered their 'true' values, and will influence the statistics used to train the model. Thus, the decision to remove outliers from any dataset, whether before or after splitting, is typically context dependent and generally left to the analyst's discretion. In our case, we will inspect the numerical feature variables for any outliers before moving to the data preprocessing stage. First extract the 'targets' and 'features' variables from ```credit_df```:
 ```python
 # Extract targets
 y = credit_df['A16']
 # Extract features
 Xfeatures = credit_df.drop(['A16'], axis = 1)
 ```
-We then split the features and targets variables into their training and testing sets.
-```python
-# Split Xfeatures into training and testing sets
-Xtrain, Xtest, ytrain, ytest = train_test_split(Xfeatures, y, test_size = 0.33, random_state = 42)
-```
-
-### 3.2 Imputing the missing data
-Before discussing methods of imputing missing values in the training and testing datasets, we elaborate on our aforementioned choice of imputing the missing values over omitting those samples as a whole. As the total number of samples (690) comprising the original dataset is already small, then omitting any entirely could detract from the performance of the ensuing ML model. On the other hand, as only approximately 0.61% of the available values are missing, one could argue on reasonable grounds for their omission. However, conventional practice is to provide the predictive model with as much training data as possible so as to maximise support during the learning stage. Additionally, any remaining features from those samples containing missing values would still contribute towards fine-tuning the underlying ML algorithm and improving its robustness. In conjunction, the decision to remove outliers from any dataset is typically context dependent and is often left to the designer's discretion. Before imputing any missing data, we perform a preliminary exploration of the ```Xfeatures``` dataframe and generate histograms for the numerical features. To generalise our implementation for scalability, we generate a new module called ```CCASubs``` and within it, develop a function to automatically extract the column header names for those categorical and numerical features.
+Now, generate histograms for the numerical features comprising the ```Xfeatures``` dataframe. To generalise our implementation for scalability, we create a module called ```CCASubs``` and within it, develop a function to automatically extract the column header names for those categorical and numerical features.
 ```python
 ## EXTRACTS HEADER NAMES OF CATEGORICAL AND NUMERICAL COLUMNS IN DATAFRAME
 ## INPUTS:
@@ -260,7 +229,7 @@ import CCASubs
 # Get header names for the categorical and numerical columns
 cat_cols, num_cols = CCASubs.get_categorical_numerical_headers(Xfeatures)
 ```
-Since it is not meaningful to determine 'outliers' in the context of categorical data, we inspect the histograms pertaining to the numerical features.
+Generate the histograms for those numerical features using ```num_cols```.
 ```python
 ## GENERATE HISTOGRAM OF NUMERICAL FEATURES BEFORE IMPUTING
 # Configure backend for interactive mode
@@ -288,6 +257,46 @@ for i in np.arange(sp_row):
 ![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_numerical_features_before_imputing.png)
 
 The distribution of the data for these numerical features are heavy-tailed and skewed to the right. Although a number of techniques could be implemented to more rigorously assess what distribution each feature conforms to, we may invoke the Central Limit Theorem (CLT) to sensibly assume that these features are normally distributed. Furthermore, given how the features of this dataset most likely reflect those characteristics outlined in Section 3.1 (gender, age, debt, marital status, etc), we can intuit that any 'outliers' would be "true" outliers; not being representative of any measurement or processing errors, data entry or poor sampling. Thus, we deem it appropriate to preserve any outliers and for their inclusion during the training and testing stages of the ML models.
+
+## 3. Preprocessing the data
+Following our earlier inspection of the data, it is clearly necessary we preprocess the data before building our ML models. The preprocessing sequence can be broken down into the following tasks:
+
+- Splitting the dataset into training and testing sets.
+- Imputing the missing data.
+- Converting non-numerical data.
+- Scaling the feature values.
+
+At this point of the preprocessing stage, we make two remarks: first, it is important to impute any missing information in both the training and testing datasets. Ignoring any missed values can negatively affect the performance of the predictive model, with some ML algorithms requiring a complete dataset for their successful operation (such as Logistic Regression). Second, we note how it is ideal to first split the data into the training and testing datasets prior to imputing. This is due to what the training and testing datasets attempt to replicate in practice: the training dataset comprises historical information that is used to first build the predictive model, while the testing dataset serves as future unknown information which the model ingests to predict an outcome. In essence, the training dataset represents the past, with the testing dataset representing the future. Since the ML model is constructed solely from the training dataset, any preprocessing of the data, such as imputing missing values, should be performed on the training dataset alone. In other words, any imputation method applied to the training dataset should consider only those statistics of the training dataset. Then, if the testing dataset also requires imputing, its imputation method should follow that which was applied to the training dataset. This procedure ensures that no information from the testing data is used to preprocess the training data, which would bias the construction of the ML model and its ensuing results. This concept is referred to as 'data leakage', and will be handled accordingly in this project prior to constructing our ML models later on. Our justification for opting to impute the missing values instead of omitting those samples entirely will also be covered.
+
+### 3.1 Splitting the dataset into training and testing sets
+We first begin with a small discussion regarding the technique of _feature selection_ as it pertains to this dataset. In Section 1, the anonymised data contained within the ```credit_approval.data.original``` dataframe reveals very little about the nature of the features. However, [this resource](http://rstudio-pubs-static.s3.amazonaws.com/73039_9946de135c0a49daa7a0a9eda4a67a72.html) provides insight to those characteristics typically employed by banking institutions when considering credit card applications. Following from this, we can determine with good confidence that the features of the ```credit_approval.data.original``` dataframe map to the following characteristics:
+  
+- A1: Gender
+- A2: Age
+- A3: Debt
+- A4: Marital status
+- A5: Bank customer type
+- A6: Education level
+- A7: Ethnicity
+- A8: Years of Employment
+- A9: Prior default
+- A10: Employment status
+- A11: Credit score
+- A12: Drivers license type
+- A13: Citizenship status
+- A14: Zipcode
+- A15: Income
+- A16: Approval status
+
+With the nature of the dataset becoming more apparent, feature selection could be exercised. For instance, columns A12 and A14 could be dropped prior to splitting the dataset, as drivers license type and zipcode could be declared as relatively minor factors compared to the other characteristics when deciding the approval of a credit card application. This small-scale example of feature selection supports how good feature selection practices can facilitate ML modelling by reducing the number of overall features and the introduction of noise to the dataset; improving the performance, efficiency, and interpretability of the ML model. In practice however, a more robust method for determining which features are relevant for inclusion would involve measuring the statistical correlation between the available features along with the targets. Since this is beyond the scope of the project, we ignore this process and leave all features within the dataset intact. 
+We then split the features and targets variables into their training and testing sets.
+```python
+# Split Xfeatures into training and testing sets
+Xtrain, Xtest, ytrain, ytest = train_test_split(Xfeatures, y, test_size = 0.33, random_state = 42)
+```
+
+### 3.2 Imputing the missing data
+Before discussing methods of imputing missing values in the training and testing datasets, we elaborate on our aforementioned choice of imputing the missing values over omitting those samples as a whole. As the total number of samples (690) comprising the original dataset is already small, then omitting any entirely could detract from the performance of the ensuing ML model. On the other hand, as only approximately 0.61% of the available values are missing, one could argue on reasonable grounds for their omission. However, conventional practice is to provide the predictive model with as much training data as possible so as to maximise support during the learning stage. Additionally, any remaining features from those samples containing missing values would still contribute towards fine-tuning the underlying ML algorithm and improving its robustness. 
 
 With these justifications in mind, we are now ready to perform data imputation on ```Xtrain``` and ```Xtest```. As ```nan``` values are used to indicate any missing data, we first inspect the distribution of ```nan``` values  across all columns of ```Xtrain``` and ```Xtest```.
 ```python
@@ -527,3 +536,5 @@ Xtest (encoded):
 ```
 
 ### 3.4 Scaling the feature values
+- In Section 2, we saw how the values of column A15 are several orders of magnitude greater than the other numerical values. While this suggests implementing feature scaling techniques, we first acknowledge how its suitability depends on the ML methods applied to the dataset.
+- For this project, we will be using the ML methods of Logistic Regression, KNN and Random Forest. All three methods fall under the umbrella of classification models, for which distance metrics (such as Euclidean, Manhattan, Minkowski or Hamming) can be used to improve performance. 
