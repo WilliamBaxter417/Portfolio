@@ -231,7 +231,7 @@ cat_cols, num_cols = CCASubs.get_categorical_numerical_headers(Xfeatures)
 ```
 Generate the histograms for those numerical features using ```num_cols```.
 ```python
-## GENERATE HISTOGRAM OF NUMERICAL FEATURES BEFORE IMPUTING
+## GENERATE HISTOGRAM OF NUMERICAL FEATURES BEFORE SPLITTING AND IMPUTING
 # Configure backend for interactive mode
 matplotlib.use('TkAgg')
 # Initialise (2 x 3) axes for subplot of histograms (there are 6 numerical features)
