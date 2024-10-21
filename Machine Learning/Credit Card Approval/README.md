@@ -286,7 +286,7 @@ for i in np.arange(sp_row):
         plt.tight_layout
 ```
 
-![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_numerical_features_before_imputing.png)
+![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_numerical_features_before_preprocessing.png)
 
 The distribution of the data for these numerical features are heavy-tailed and skewed to the right, meaning that their medians are less than their means, and suggests the presence of outliers. As an additional check, we also visualise the target variable within the ```credit_df``` dataframe to compare the number of approved and declined applications.
 ```python
