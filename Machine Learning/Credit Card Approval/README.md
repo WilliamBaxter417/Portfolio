@@ -174,7 +174,7 @@ min     13.750000    0.000000    0.000000    0.00000     0.000000       0.000000
 75%     38.230000    7.207500    2.625000    3.00000   276.000000     395.500000  
 max     80.250000   28.000000   28.500000   67.00000  2000.000000  100000.000000
 ```
-The above summary statistics have been automatically limited to those columns pertaining to numerical features. Furthermore, the ```count``` field reveals that columns A2 and A14 do not include all 690 rows of the dataset. As indicated by the ```missing_values``` column in the table returned by ```credit_approval.variables``` , this means that some entries from features A2 and A14 are missing (along with columns A1, A4, A5, A6 and A7) and will require imputation. We also see how the values in column A15 are several orders of magnitude greater than those of the other numerical columns, suggesting we apply feature scaling techniques to the data. This will be addressed in further detail later on in the project.
+The above summary statistics have been automatically limited to those columns pertaining to numerical features. Furthermore, the ```count``` field reveals that columns A2 and A14 do not include all 690 rows of the dataset. As indicated by the ```missing_values``` column in the table returned by ```credit_approval.variables``` , this means that some entries from features A2 and A14 are missing (along with columns A1, A4, A5, A6 and A7) and will require imputation. We also see how the values in column A15 are several orders of magnitude greater than those of the other numerical columns, suggesting we apply feature scaling techniques. This will be addressed in further detail later on in the project.
 
 Before preprocessing the data to impute any missing values and perform feature scaling, we conclude our initial exploration by examining the histograms of these numerical features. While this is normally performed after preprocessing to obtain a more accurate interpretation, an early examination helps build familiarity with the data and can provide general insights to their distributions. Moreover, this allows us to make early inferences about the existence of any outliers. We first extract the 'targets' and 'features' variables from ```credit_df```:
 ```python
@@ -247,10 +247,10 @@ for i in np.arange(sp_row):
 
 ![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_numerical_features_before_imputing.png)
 
-The distribution of the data for these numerical features are heavy-tailed and skewed to the right, meaning that the median is less than the mean and suggests the presence of outliers. At this final stage of our exploration, these simple visualisations of the distributions provide us with sufficient preliminary knowledge of the data. While any further analysis necessitates we preprocess the data before extracting more meaningful insights, this initial exploration has helped us gain familiarity with the overall data along with a possible characterisation of its anonymised features and a rudimentary investigation of its statistics.
+The distribution of the data for these numerical features are heavy-tailed and skewed to the right, meaning that their medians are less than their means, and suggests the presence of outliers. At this final stage of our exploration, these simple visualisations give an early overview of the statistics underlying the numerical features. While any further analysis requires we first preprocess the data, this initial exploration has successfully developed our familiarity with the overall dataset and how it should be processed prior to implementing the ML models.
 
 ## 3. Preprocessing the data
-Following our earlier inspection of the data, it is clearly necessary we preprocess the data before building our ML models. The preprocessing sequence can be broken down into the following tasks:
+Following our initial exploration, we will now preprocess the data before building our ML models. The preprocessing sequence can be broken down into the following tasks:
 
 - Splitting the dataset into training and testing sets.
 - Imputing the missing data.
