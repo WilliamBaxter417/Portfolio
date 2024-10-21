@@ -24,44 +24,67 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 ## 1. Import dataset
 This project utilises the [credit card approval dataset](https://archive.ics.uci.edu/dataset/27/credit+approval) imported from the UCI Machine Learning Repository which has been anonymised for confidentiality. We import the dataset as follows:
 ```python
-# UC Irvine Machine Learning Repository
+# Import UC Irvine Machine Learning Repository
 from ucimlrepo import fetch_ucirepo
-# fetch dataset
+# Fetch dataset
 credit_approval = fetch_ucirepo(id=27)
 ```
 Inspecting the type of ```credit_approval```, we see that it consists of 3 keys: 'features', 'targets', and 'original'.
 ```python
-credit_approval.data.features.head()
+print('credit_approval.data.features:\n')
+print(credit_approval.data.features)
+print('\n')
+print('credit_approval.data.targets:\n')
+print(credit_approval.data.targets)
+print('\n')
+print('credit_approval.data.original:\n')
+print(credit_approval.data.original)
 ```
 ```python
-   A15    A14 A13 A12  A11 A10 A9    A8 A7 A6 A5 A4     A3     A2 A1
-0    0  202.0   g   f    1   t  t  1.25  v  w  g  u  0.000  30.83  b
-1  560   43.0   g   f    6   t  t  3.04  h  q  g  u  4.460  58.67  a
-2  824  280.0   g   f    0   f  t  1.50  h  q  g  u  0.500  24.50  a
-3    3  100.0   g   t    5   t  t  3.75  v  w  g  u  1.540  27.83  b
-4    0  120.0   s   f    0   f  t  1.71  v  w  g  u  5.625  20.17  b
-```
-```python
-credit_approval.data.targets.head()
-```
-```python
-  A16
-0   +
-1   +
-2   +
-3   +
-4   +
-```
-```python
-credit_approval.data.original.head()
-```
-```python
-  A1     A2     A3 A4 A5 A6 A7    A8 A9 A10  A11 A12 A13    A14  A15 A16
-0  b  30.83  0.000  u  g  w  v  1.25  t   t    1   f   g  202.0    0   +
-1  a  58.67  4.460  u  g  q  h  3.04  t   t    6   f   g   43.0  560   +
-2  a  24.50  0.500  u  g  q  h  1.50  t   f    0   f   g  280.0  824   +
-3  b  27.83  1.540  u  g  w  v  3.75  t   t    5   t   g  100.0    3   +
-4  b  20.17  5.625  u  g  w  v  1.71  t   f    0   f   s  120.0    0   +
+credit_approval.data.features:
+     A15    A14 A13 A12  A11 A10 A9    A8  A7  A6 A5 A4      A3     A2 A1
+0      0  202.0   g   f    1   t  t  1.25   v   w  g  u   0.000  30.83  b
+1    560   43.0   g   f    6   t  t  3.04   h   q  g  u   4.460  58.67  a
+2    824  280.0   g   f    0   f  t  1.50   h   q  g  u   0.500  24.50  a
+3      3  100.0   g   t    5   t  t  3.75   v   w  g  u   1.540  27.83  b
+4      0  120.0   s   f    0   f  t  1.71   v   w  g  u   5.625  20.17  b
+..   ...    ...  ..  ..  ...  .. ..   ...  ..  .. .. ..     ...    ... ..
+685    0  260.0   g   f    0   f  f  1.25   h   e  p  y  10.085  21.08  b
+686  394  200.0   g   t    2   t  f  2.00   v   c  g  u   0.750  22.67  a
+687    1  200.0   g   t    1   t  f  2.00  ff  ff  p  y  13.500  25.25  a
+688  750  280.0   g   f    0   f  f  0.04   v  aa  g  u   0.205  17.92  b
+689    0    0.0   g   t    0   f  f  8.29   h   c  g  u   3.375  35.00  b
+[690 rows x 15 columns]
+
+credit_approval.data.targets:
+    A16
+0     +
+1     +
+2     +
+3     +
+4     +
+..   ..
+685   -
+686   -
+687   -
+688   -
+689   -
+[690 rows x 1 columns]
+
+credit_approval.data.original:
+    A1     A2      A3 A4 A5  A6  A7    A8 A9 A10  A11 A12 A13    A14  A15 A16
+0    b  30.83   0.000  u  g   w   v  1.25  t   t    1   f   g  202.0    0   +
+1    a  58.67   4.460  u  g   q   h  3.04  t   t    6   f   g   43.0  560   +
+2    a  24.50   0.500  u  g   q   h  1.50  t   f    0   f   g  280.0  824   +
+3    b  27.83   1.540  u  g   w   v  3.75  t   t    5   t   g  100.0    3   +
+4    b  20.17   5.625  u  g   w   v  1.71  t   f    0   f   s  120.0    0   +
+..  ..    ...     ... .. ..  ..  ..   ... ..  ..  ...  ..  ..    ...  ...  ..
+685  b  21.08  10.085  y  p   e   h  1.25  f   f    0   f   g  260.0    0   -
+686  a  22.67   0.750  u  g   c   v  2.00  f   t    2   t   g  200.0  394   -
+687  a  25.25  13.500  y  p  ff  ff  2.00  f   t    1   t   g  200.0    1   -
+688  b  17.92   0.205  u  g  aa   v  0.04  f   f    0   f   g  280.0  750   -
+689  b  35.00   3.375  u  g   c   h  8.29  f   f    0   t   g    0.0    0   -
+[690 rows x 16 columns]
 ```
 The dataset contains 690 rows with some missing values, with the 'original' key being composed of the columns from the 'features' and 'targets' keys. Upon further inspection of the ```credit_approval.data.original``` dataframe, we identify its attributes to be:
 
@@ -106,9 +129,12 @@ This mapping will help during the later stages of this project when more informe
 ## 2. Data Exploration
 Beginning our data exploration, we check the fields for those variables comprising the `credit_approval` dataframe.
 ```python
-credit_approval.variables
+# Check fields comprising variables in credit_approval
+print('credit_approval.variables:\n')
+print(credit_approval.variables)
 ```
 ```python
+credit_approval.variables:
    name     role         type demographic description units missing_values
 0   A16   Target  Categorical        None        None  None             no
 1   A15  Feature   Continuous        None        None  None             no
@@ -127,14 +153,16 @@ credit_approval.variables
 14   A2  Feature   Continuous        None        None  None            yes
 15   A1  Feature  Categorical        None        None  None            yes
 ```
-Checking the information and summary statistics (and making the assignment ```credit_df = credit_approval.data.original```):
+Assign ```credit_df = credit_approval.data.original``` and check the information and summary statistics.
 ```python
-# Assign '.original' dataframe to credit_df
+# Reassign credit_approval.data.original to credit_df
 credit_df = credit_approval.data.original
 # Check information
-credit_df.info()
+print('credit_df.info():\n')
+print(credit_df.info())
 ```
 ```python
+credit_df.info():
 <class 'pandas.core.frame.DataFrame'>
 RangeIndex: 690 entries, 0 to 689
 Data columns (total 16 columns):
@@ -158,12 +186,16 @@ Data columns (total 16 columns):
  15  A16     690 non-null    object 
 dtypes: float64(4), int64(2), object(10)
 memory usage: 86.4+ KB
+None
 ```
 ```python
 # Check summary statistics
-credit_df.describe()
+print('credit_df.describe():\n')
+pd.options.display.max_columns = None
+print(credit_df.describe())
 ```
 ```python
+credit_df.describe():
                A2          A3          A8        A11          A14            A15
 count  678.000000  690.000000  690.000000  690.00000   677.000000     690.000000  
 mean    31.568171    4.758725    2.223406    2.40000   184.014771    1017.385507  
@@ -222,7 +254,6 @@ cat_cols, num_cols = CCASubs.get_categorical_numerical_headers(Xfeatures)
 ```
 Generate the histograms for those numerical features using ```num_cols```.
 ```python
-## GENERATE HISTOGRAM OF NUMERICAL FEATURES BEFORE SPLITTING AND IMPUTING
 # Configure backend for interactive mode
 matplotlib.use('TkAgg')
 # Initialise (2 x 3) axes for subplot of histograms (there are 6 numerical features)
@@ -288,10 +319,15 @@ Before discussing methods of imputing missing values in the training and testing
 
 With these justifications in mind, we are now ready to perform data imputation on ```Xtrain``` and ```Xtest```. As ```nan``` values are used to indicate any missing data, we first inspect the distribution of ```nan``` values  across all columns of ```Xtrain``` and ```Xtest```.
 ```python
-Xtrain.isna().sum()
-Xtest.isna().sum()
+# Count number of nan entries in Xtrain before imputing
+print('Number of nan entries in Xtrain before imputing:\n')
+print(Xtrain.isna().sum())
+# Count number of nan entries in Xtest before imputing
+print('Number of nan entries in Xtest before imputing:\n')
+print(Xtest.isna().sum())
 ```
 ```python
+Number of nan entries in Xtrain before imputing:
 A1      8
 A2      5
 A3      0
@@ -308,6 +344,8 @@ A13     0
 A14    12
 A15     0
 dtype: int64
+
+Number of nan entries in Xtest before imputing:
 A1     4
 A2     7
 A3     0
@@ -377,12 +415,16 @@ Input ```Xtrain``` and ```Xtest``` to this function (contained in ```CCASubs.py`
 ```python
 # Impute Xtrain and Xtest using the impute_train_test function
 CCASubs.impute_train_test(Xtrain, Xtest)
-# Count number of nan entries in Xtrain
+
+# Count number of nan entries in Xtrain after imputing
+print('Number of nan entries in Xtrain after imputing:\n')
 Xtrain.isna().sum()
-# Count number of nan entries in Xtest
+# Count number of nan entries in Xtest after imputing
+print('Number of nan entries in Xtest after imputing:\n')
 Xtest.isna().sum()
 ```
 ```python
+Number of nan entries in Xtrain after imputing:
 A1     0
 A2     0
 A3     0
@@ -399,6 +441,8 @@ A13    0
 A14    0
 A15    0
 dtype: int64
+
+Number of nan entries in Xtest after imputing:
 A1     0
 A2     0
 A3     0
@@ -420,31 +464,9 @@ dtype: int64
 ### 3.3 Converting non-numerical data
 We now proceed to convert the categorical feature variables into numerical data types. This task is necessary as many ML models require the data to be strictly numerical in type, with this conversion also resulting in faster computation. To achieve this, we utilise the ```OrdinalEncoder()``` routine from the ```sklearn.preprocessing``` library to encode the categorical features into integer arrays. We note how similarly to before, this task is executed after the data has been split into its training and testing sets so as to circumvent data leakage. If the data were to be encoded before splitting, the model would be effectively informed a priori of the labels composing the future data and would lead to it overfitting during the testing phase. Additionally, the encoding model should first be fitted using only the data from the training set before being applied to both the training and testing sets to effect a proper transformation.
 
-For scalability, we write a function to automate the process of extracting the header names for the categorical features.
+Print the categorical features of ```Xtrain``` and ```Xtest``` before encoding.
 ```python
-## EXTRACTS HEADER NAMES OF CATEGORICAL COLUMNS IN DATAFRAME
-## INPUTS:
-### df: dataframe
-## OUTPUTS:
-### obj_col: array of names of categorical columns
-def get_categorical_col_names(df):
-    # Identify columns of data type object ('O')
-    obj_bool = (df.dtypes == 'O')
-    # Find index values of categorical columns
-    obj_idx = np.where(obj_bool)[0]
-    # Initialise empty array of strings to store header names
-    obj_col = [''] * obj_idx.shape[0]
-    for i in np.arange(obj_idx.shape[0]):
-        # Generate headers with string arithmetic and type conversion
-        obj_col[i] = 'A' + str(obj_idx[i]+1)
-
-    return obj_col
-```
-Check that the function correctly returns all categorical features and list them.
-```python
-# Get header names for the categorical columns
-cat_cols = CCASubs.get_categorical_col_names(Xfeatures)
-# Check categorical columns for Xtrain and Xtest
+# Print categorical columns for Xtrain and Xtest
 print('Xtrain (categorical columns):\n')
 print(Xtrain[cat_cols])
 print('\n')
@@ -481,6 +503,15 @@ Xtest (categorical columns):
 271  b  u  g   c   v  f   f   t   g
 311  b  y  p   c   v  f   f   t   g
 [228 rows x 9 columns]
+```
+Instantiate the ordinal encoder and fit it to the categorical columns of ```Xtrain```, then apply the transformation to both ```Xtrain``` and ```Xtest```.
+```python
+# Instantiate OrdinalEncoder() function
+ordinal_encoder = OrdinalEncoder()
+# Fit and transform the encoder to the training data
+Xtrain[cat_cols] = ordinal_encoder.fit_transform(Xtrain[cat_cols])
+# Transform the testing data using the encoder previously fitted to the training data
+Xtest[cat_cols] = ordinal_encoder.transform(Xtest[cat_cols])
 ```
 Verify the results of the ordinal encoder.
 ```python
