@@ -152,40 +152,9 @@ min     13.750000    0.000000    0.000000    0.00000     0.000000       0.000000
 75%     38.230000    7.207500    2.625000    3.00000   276.000000     395.500000  
 max     80.250000   28.000000   28.500000   67.00000  2000.000000  100000.000000
 ```
-The above summary statistics have been automatically limited to those columns pertaining to numerical features. Furthermore, the ```count``` field reveals that columns A2 and A14 do not include all 690 rows of the dataset. As indicated by the ```missing_values``` column in the table returned by ```credit_approval.variables``` , this means that some entries from columns A2 and A14 are missing (along with columns A1, A4, A5, A6 and A7). This is quickly confirmed by counting the number of ```nan``` entries in A2 and A14:
-```python
-# Counter number of nan entries in 'A2'
-sum(credit_df.A2.isnull())
-```
-```python
-12
-```
-```python
-# Counter number of nan entries in 'A14'
-sum(credit_df.A14.isnull())
-```
-```python
-13
-```
-Then limiting our summary statistics to columns A3, A8, A11 and A15, we have:
-```python
-# Check summary statistics for A3, A8, A11 and A15
-credit_df[['A3','A8','A11','A15']].describe()
-```
-```python
-               A3          A8        A11            A15
-count  690.000000  690.000000  690.00000     690.000000
-mean     4.758725    2.223406    2.40000    1017.385507
-std      4.978163    3.346513    4.86294    5210.102598
-min      0.000000    0.000000    0.00000       0.000000
-25%      1.000000    0.165000    0.00000       0.000000
-50%      2.750000    1.000000    0.00000       5.000000
-75%      7.207500    2.625000    3.00000     395.500000
-max     28.000000   28.500000   67.00000  100000.000000
-```
-We also realise that the values in column A15 are several orders of magnitude greater than those of the other numerical columns, suggesting we eventually apply feature scaling techniques to the data. This will be addressed in further detail later on in the project.
+The above summary statistics have been automatically limited to those columns pertaining to numerical features. Furthermore, the ```count``` field reveals that columns A2 and A14 do not include all 690 rows of the dataset. As indicated by the ```missing_values``` column in the table returned by ```credit_approval.variables``` , this means that some entries from features A2 and A14 are missing (along with columns A1, A4, A5, A6 and A7). We also see how the values in column A15 are several orders of magnitude greater than those of the other numerical columns, suggesting we eventually apply feature scaling techniques to the data. This will be addressed in further detail later on in the project.
 
-We now generate the boxplots corresponding to features A3, A8, A11 and A15 in order to visually aid the summary statistics generated above. Moreover, this enables us to observe any outliers within the numerical features of the dataset, which is a significant task when intrepreting the dataset and staging it for preprocessing. Before doing so however, we quickly discuss the two main approaches towards the management of outliers and their underlying caveats. The first approach involves removing any outliers before splitting the data into its training and testing sets. This ensures consistency throughout the entire dataset as their removal would adjust the means and variances of the numerical features (thereby affecting any imputation methods applied later on). While their exclusion would positively influence the construction of the ML model, we can no longer assess its performance when exposed to anomalous values that may simulate certain scenarios in practice. Meanwhile, the second approach involves removing any outliers after splitting the data. In this case, outliers are removed only from the training set in order to reduce any skewed analyses or inaccuracies in the model, while those within the testing set are preserved to give better insight to their effect on its performance. In this approach however, the means and variances corresponding to the training set may not accurately reflect what could otherwise be considered their 'true' values, and will influence the statistics used to train the model. Thus, the decision to remove outliers from any dataset, whether before or after splitting, is typically context dependent and generally left to the analyst's discretion. In our case, we will inspect the numerical feature variables for any outliers before moving to the data preprocessing stage. First extract the 'targets' and 'features' variables from ```credit_df```:
+We now generate the boxplots corresponding to features A2, A3, A8, A11, A14 and A15 in order to visually aid the summary statistics generated above. Moreover, this enables us to observe any outliers within the numerical features of the dataset, which is a significant task when intrepreting the dataset and staging it for preprocessing. Before doing so however, we quickly discuss the two main approaches towards the management of outliers and their underlying caveats. The first approach involves removing any outliers before splitting the data into its training and testing sets. This ensures consistency throughout the entire dataset as their removal would adjust the means and variances of the numerical features, thereby affecting any imputation methods applied later on. While their exclusion would positively influence the robustness of the ML model, we can no longer assess its performance with anomalous values that would simulate fringe cases in practice. Meanwhile, the second approach involves removing any outliers after splitting the data. In this case, outliers are removed only from the training set in order to reduce any skewed analyses or inaccuracies in the model, while those within the testing set are preserved to give better insight to its performance. Consequently, the means and variances corresponding to the training set may not accurately reflect what could otherwise be considered their 'true' values, and would influence the statistics used to train the model. Thus, the decision to remove outliers from any dataset, whether before or after splitting, is typically context dependent and generally left to the analyst's discretion. In our case, we will inspect the numerical features for any outliers before moving to the data preprocessing stage. First, we extract the 'targets' and 'features' variables from ```credit_df```:
 ```python
 # Extract targets
 y = credit_df['A16']
