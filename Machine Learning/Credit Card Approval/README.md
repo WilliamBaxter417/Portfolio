@@ -1,7 +1,7 @@
 # Predicting Credit Card Approvals using Machine Learning
 Credit card approvals comprise the many types of applications received by modern commerical banking institutions. A variety of metrics are used to determine an individual's successful credit card approval, inluding their age, income and credit score. With the growing number of these applications, their manual analysis is often time-consuming and can be subject to error. Machine learning methods provide an effective solution for automating this process, which ultimately involves a classification task, i.e. the application is either accepted or denied. For this project, we will build a predictor which automates the credit card approval process via the machine learning methods of Logistic Regression, K-nearest neighbours (KNN) and Random Forest Models.
 
-## 0. Importing Packages
+## 0. Import Packages
 We begin by importing the necessary Python libraries.
 ```python
 # Math and Plotting libraries
@@ -21,7 +21,7 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 ```
 
-## 1. Importing the dataset
+## 1. Import dataset
 This project utilises the [credit card approval dataset](https://archive.ics.uci.edu/dataset/27/credit+approval) imported from the UCI Machine Learning Repository which has been anonymised for confidentiality. We import the dataset as follows:
 ```python
 # UC Irvine Machine Learning Repository
@@ -247,7 +247,24 @@ for i in np.arange(sp_row):
 
 ![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_numerical_features_before_imputing.png)
 
-The distribution of the data for these numerical features are heavy-tailed and skewed to the right, meaning that their medians are less than their means, and suggests the presence of outliers. At this final stage of our exploration, these simple visualisations give an early overview of the statistics underlying the numerical features. While any further analysis requires we first preprocess the data, this initial exploration has successfully developed our familiarity with the overall dataset and how it should be processed prior to implementing the ML models.
+The distribution of the data for these numerical features are heavy-tailed and skewed to the right, meaning that their medians are less than their means, and suggests the presence of outliers. As an additional check, we also visualise the target variable within the ```credit_df``` dataframe to compare the number of approved and declined applications.
+```python
+# Compare the number of approved and declined applications
+fig, ax = plt.subplots(1, 1, figsize = (7, 5), sharex = True)
+sns.countplot(data = credit_df, x = 'A16', edgecolor = "black", palette = "viridis", order = credit_df['A16'].value_counts().index)
+total = credit_df['A16'].value_counts().sum()
+plt.xticks(fontsize = 14)
+plt.yticks(fontsize = 14)
+plt.xlabel('Application status', fontsize = 16)
+plt.ylabel('Count', fontsize = 16)
+plt.show()
+```
+
+![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/approved_declined.png)
+
+Out of 690 samples, we see 383 (55.5%) applications were denied ('-') while 307 (44.5%) applications were approved ('+'). This implies that the dataset has an approximately equal representation of both outcomes.
+
+At this final stage of our exploration, these simple visualisations give an early overview of the statistics underlying the numerical features. While any further analysis requires we first preprocess the data, this initial exploration has successfully developed our familiarity with the overall dataset and how it should be processed prior to implementing the ML models.
 
 ## 3. Preprocessing the data
 Following our initial exploration, we will now preprocess the data before building our ML models. The preprocessing sequence can be broken down into the following tasks:
