@@ -256,7 +256,7 @@ Generate the histograms for those numerical features using ```num_cols```.
 ```python
 # Configure backend for interactive mode
 matplotlib.use('TkAgg')
-# Initialise (2 x 3) axes for subplot of histograms (there are 6 numerical features)
+# Initialise (2 x 3) axes for subplots of histograms (there are 6 numerical features)
 sp_row = 2
 sp_col = 3
 # Reshape num_cols for convenient indexing later on
@@ -264,6 +264,15 @@ num_col_reshape = np.reshape(num_cols, (sp_row, sp_col))
 # Set number of bins to be the square root of the total number of samples
 num_samples = Xfeatures.shape[0]
 num_bins = int(np.ceil(np.sqrt(num_samples)))
+# Array of characteristics
+feature_character = ['Gender', 'Age', 'Debt', 'Marital status', 'Bank customer type', 'Education level', 'Ethnicity', 'Years of Employment', 'Prior default', 'Employment status', 'Credit score', 'Drivers license type', 'Citizenship status', 'Zipcode', 'Income']
+feature_character_num = np.array(feature_character)[num_idx]
+# Reshape characteristics array for easier indexing when labelling
+feature_character_num_reshape = np.reshape(feature_character_num, (sp_row, sp_col))
+# Get header indices corresponding to numerical features
+num_idx = np.where(Xfeatures.dtypes != 'O')[0]
+# Reshape num_idx for easier indexing when labelling
+num_idx_reshape = np.reshape(num_idx, (sp_row, sp_col))
 # Instantiate subplot from matplotlib.pyplot
 fig, axs = plt.subplots(sp_row, sp_col)
 # Iterate over rows of subplot
@@ -272,8 +281,9 @@ for i in np.arange(sp_row):
     for j in np.arange(sp_col):
         # Plot histogram for corresponding column index of Xfeature dataframe
         axs[i,j].hist(Xfeatures[num_col_reshape[i,j]], bins = num_bins, edgecolor = 'black', linewidth = 1.2)
-        axs[i,j].set_xlabel(num_col_reshape[i,j], fontsize = 10)
+        axs[i,j].set_xlabel(num_col_reshape[i,j] + ' - ' + feature_character_num_reshape[i,j], fontsize = 10)
         axs[i,j].set_ylabel('Frequency')
+        plt.tight_layout
 ```
 
 ![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_numerical_features_before_imputing.png)
@@ -553,6 +563,31 @@ Xtest (encoded):
 311  1.0  19.000000   1.75  2.0  2.0   1.0  ...  0.0    0  1.0  0.0  112.0     6
 [228 rows x 15 columns]
 ```
+Visualise the now encoded ```Xtrain``` data using histograms.
+```python
+# Initialise (5 x 3) axes for subplots of histograms (there are 15 numerical features after encoding)
+sp_row = 5
+sp_col = 3
+# Reshape num_cols for convenient indexing later on
+num_col_reshape = np.reshape(Xtrain.columns, (sp_row, sp_col))
+# Set number of bins to be the square root of the total number of samples
+num_samples = Xtrain.shape[0]
+num_bins = int(np.ceil(np.sqrt(num_samples)))
+# Instantiate subplot from matplotlib.pyplot
+fig, axs = plt.subplots(sp_row, sp_col)
+# Array of characteristics
+feature_character = ['Gender', 'Age', 'Debt', 'Marital status', 'Bank customer type', 'Education level', 'Ethnicity', 'Years of Employment', 'Prior default', 'Employment status', 'Credit score', 'Drivers license type', 'Citizenship status', 'Zipcode', 'Income']
+feature_character_reshape = np.reshape(feature_character, (sp_row, sp_col))
+# Iterate over rows of subplot
+for i in np.arange(sp_row):
+    # Iterate over columns of subplot
+    for j in np.arange(sp_col):
+        # Plot histogram for corresponding column index of Xtrain dataframe
+        axs[i,j].hist(Xtrain[num_col_reshape[i,j]], bins = num_bins, edgecolor = 'black', linewidth = 1.2)
+        axs[i,j].set_xlabel(num_col_reshape[i,j] + ' - ' + feature_character_reshape[i,j], fontsize = 10)
+        axs[i,j].set_ylabel('Frequency')
+```
+![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_encoded_numerical_features_after_preprocessing.png)
 
 ### 3.4 Scaling the feature values
 - In Section 2, we saw how the values of column A15 are several orders of magnitude greater than the other numerical values. While this suggests implementing feature scaling techniques, we first acknowledge how its suitability depends on the ML methods applied to the dataset.
@@ -560,6 +595,30 @@ Xtest (encoded):
 
 
 GENERATE PLOTS
+```python
+# Convert Xtrain_rescaled to a dataframe for easier plotting
+Xtrain_rescaled_df = pd.DataFrame(Xtrain_rescaled)
+# Initialise (5 x 3) axes for subplots of histograms (there are 15 numerical features after encoding)
+sp_row = 5
+sp_col = 3
+# Reshape num_cols for convenient indexing later on
+num_rescaled_col_reshape = np.reshape(Xtrain_rescaled_df.columns, (sp_row, sp_col))
+# Set number of bins to be the square root of the total number of samples
+num_samples = Xtrain_rescaled_df.shape[0]
+num_bins = int(np.ceil(np.sqrt(num_samples)))
+# Instantiate subplot from matplotlib.pyplot
+fig, axs = plt.subplots(sp_row, sp_col)
+# Iterate over rows of subplot
+for i in np.arange(sp_row):
+    # Iterate over columns of subplot
+    for j in np.arange(sp_col):
+        # Plot histogram for corresponding column index of Xtrain_rescaled dataframe
+        axs[i,j].hist(Xtrain_rescaled_df[num_rescaled_col_reshape[i,j]], bins = num_bins, edgecolor = 'black', linewidth = 1.2)
+        axs[i,j].set_xlabel(num_col_reshape[i,j] + ' - ' + feature_character_reshape[i,j], fontsize = 10)
+        axs[i,j].set_ylabel('Frequency')
+```
+![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_scaled_numerical_features_after_preprocessing.png)
+
 Although a number of techniques could be implemented to more rigorously determine which distribution each feature conforms to, we may invoke the Central Limit Theorem (CLT) to sensibly assume that all features are normally distributed. This suggests that during preprocessing, we could apply the standard approach of identifying outliers to be those data points situated further than 3 standard deviations from the mean.
 
 THEN GIVE DISCUSSION ABOUT OUTLIERS:
