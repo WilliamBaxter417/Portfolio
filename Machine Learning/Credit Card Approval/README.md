@@ -621,6 +621,29 @@ for i in np.arange(sp_row):
 
 Although a number of techniques could be implemented to more rigorously determine which distribution each feature conforms to, we may invoke the Central Limit Theorem (CLT) to sensibly assume that all features are normally distributed. This suggests that during preprocessing, we could apply the standard approach of identifying outliers to be those data points situated further than 3 standard deviations from the mean.
 
+```python
+# Initialise (2 x 3) axes for subplots of histograms (there are 6 numerical features)
+sp_row = 2
+sp_col = 3
+# Array of numerical characteristics
+num_idx = np.where(Xfeatures.dtypes != 'O')[0]
+num_idx_reshape = np.reshape(num_idx, (sp_row, sp_col))
+feature_character_num = np.array(feature_character)[num_idx]
+feature_character_num_reshape = np.reshape(feature_character_num, (sp_row, sp_col))
+# Reshape num_cols for convenient indexing later on
+num_col_reshape = np.reshape(num_cols, (sp_row, sp_col))
+fig, axs = plt.subplots(sp_row, sp_col)
+for i in np.arange(sp_row):
+    # Iterate over columns of subplot
+    for j in np.arange(sp_col):
+        # Plot boxplot for corresponding column index of Xfeature dataframe
+        axs[i,j].boxplot(Xtrain_rescaled_df[num_idx_reshape[i,j]], vert = 0, sym = 'rs', positions=[0], widths=[0.3])
+        axs[i,j].set_xlabel(num_col_reshape[i,j] + ' - ' + feature_character_num_reshape[i,j], fontsize = 10)
+        axs[i,j].get_yaxis().set_ticks([])
+        plt.tight_layout()
+```
+![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/box_scaled_numerical_features.png)
+
 THEN GIVE DISCUSSION ABOUT OUTLIERS:
 
 We quickly discuss the two main approaches towards the management of outliers and their underlying caveats. The first approach involves removing any outliers before splitting the data into its training and testing sets. This ensures consistency throughout the entire dataset as their removal would adjust the means and variances of the numerical features, thereby affecting any imputation methods applied later on. While their exclusion would positively influence the robustness of the ML model, we can no longer assess its performance with anomalous values that would simulate fringe cases in practice. Meanwhile, the second approach involves removing any outliers after splitting the data. In this case, outliers are removed only from the training set in order to reduce any skewed analyses or inaccuracies in the model, while those within the testing set are preserved to give better insight to its performance. Consequently, the means and variances corresponding to the training set may not accurately reflect what could otherwise be considered their 'true' values, and would influence the statistics used to train the model. Thus, the decision to remove outliers from any dataset, whether before or after splitting, is typically context dependent and generally left to the analyst's discretion. In our case, we will inspect the numerical features for any outliers before moving to the data preprocessing stage. Furthermore, given how the features of this dataset most likely reflect those characteristics outlined in Section 3.1 (gender, age, debt, marital status, etc), we can intuit that any 'outliers' would be "true" outliers; not being representative of any measurement or processing errors, data entry or poor sampling. Thus, we deem it appropriate to preserve any outliers and for their inclusion during the training and testing stages of the ML models.
