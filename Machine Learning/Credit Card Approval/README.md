@@ -590,8 +590,12 @@ for i in np.arange(sp_row):
 ![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_encoded_numerical_features_after_preprocessing.png)
 
 ### 3.4 Scaling the feature values
-- In Section 2, we saw how the values of column A15 are several orders of magnitude greater than the other numerical values. While this suggests implementing feature scaling techniques, we first acknowledge how its suitability depends on the ML methods applied to the dataset.
-- For this project, we will be using the ML methods of Logistic Regression, KNN and Random Forest. All three methods fall under the umbrella of classification models, for which distance metrics (such as Euclidean, Manhattan, Minkowski or Hamming) can be used to improve performance.
+In Section 2, we saw how the values of column A15 are several orders of magnitude greater than the other numerical features. For datasets like this, significant variations in feature values can biase the performance of the ensuing ML model and complicate the learning phase. To circumvent this, feature scaling techniques are applied to the training and testing datasets, with the most common being the standard scaler and min-max scaler. The former technique standardises the data by scaling it to have a mean of 0 and a standard deviation of 1, while the latter technique normalises the data by scaling it between 0 and 1. While various other techniques exist, each with their own caveats, the decision for which technique to apply typically depends on the ML algorithm being used.
+
+- In any case, feature scaling is an important consideration as the algorithms underlying some ML models are sensitive to this technique. For this project, we will be using the ML methods of Logistic Regression, KNN and Random Forest. All three methods fall under the umbrella of classification models, for which distance metrics (such as Euclidean, Manhattan, Minkowski or Hamming) can be used to improve performance. In this way, we 
+  
+- Having encoded the training and testing data, we are now ready to apply feature scaling to both datasets. This is a necessary  an important p feature scaling is The most common techniques include standardisation, We first acknowledge how its suitability depends on the ML methods applied to the dataset.
+- 
 
 
 GENERATE PLOTS
@@ -619,8 +623,7 @@ for i in np.arange(sp_row):
 ```
 ![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_scaled_numerical_features_after_preprocessing.png)
 
-Although a number of techniques could be implemented to more rigorously determine which distribution each feature conforms to, we may invoke the Central Limit Theorem (CLT) to sensibly assume that all features are normally distributed. This suggests that during preprocessing, we could apply the standard approach of identifying outliers to be those data points situated further than 3 standard deviations from the mean.
-
+Although a number of techniques could be implemented to more rigorously determine which distribution each feature conforms to, we may invoke the Central Limit Theorem (CLT) to sensibly assume that all features are normally distributed. This suggests that during preprocessing, we could apply the standard approach of identifying outliers to be those data points situated further than 3 standard deviations from the mean. To provide a better visualisation of these outliers, we generate the boxplots for those numerical features A2, A3, A8, A11, A14 and A15.
 ```python
 # Initialise (2 x 3) axes for subplots of histograms (there are 6 numerical features)
 sp_row = 2
