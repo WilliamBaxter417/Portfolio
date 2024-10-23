@@ -592,21 +592,28 @@ for i in np.arange(sp_row):
 ### 3.4 Scaling the feature values
 In Section 2, we saw how the values of feature A15 (income) are several orders of magnitude greater than the other numerical features. For datasets like this, significant variations in feature values can bias the performance of the ensuing ML model. To circumvent this, feature scaling techniques are applied to the training and testing data, with the most common being the standard scaler and min-max scaler. The former technique standardises the data by scaling it to have a mean of 0 and a standard deviation of 1, and the latter technique normalises the data by scaling it between 0 and 1. While there are other techniques, each with their own caveats, the decision on applying feature scaling to the data ultimately depends on the ML algorithm being used.
 
-For this project, we will be using the ML methods of Logistic Regression, KNN and Random Forest, which all fall under the umbrella of classification models. For Logistic Regression, the underlying algorithm employs the principles of gradient descent to effect the optimisation technique. For these types of ML models, feature scaling can assist the gradient descent to converge more quickly towards the minima. For KNN, distance-based algorithms are normally employed, whereby the distance between data points is used to determine their similarity and thus their classifications. Given this dependency on distance-based algorithms, ML models which utilise this method, such as KNN, are highly sensitive to feature scaling. On the other hand, the algorithms underlying decision tree-based ML models, such as Random Forest, are generally invariant to feature scaling since the decision tree only splits a node based on available feature.
+For this project, we will be using the ML methods of Logistic Regression, KNN and Random Forest, which all fall under the umbrella of classification models. For Logistic Regression, the underlying algorithm employs the principles of gradient descent to effect the optimisation technique. For these types of ML models, feature scaling can assist the gradient descent to converge more quickly towards the minima. For KNN, distance-based algorithms are normally employed, whereby the distance between data points is used to determine their similarity and thus their classifications. Given this dependency on distance-based algorithms, ML models which utilise this method, such as KNN, are highly sensitive to feature scaling. On the other hand, the algorithms underlying decision tree-based ML models, such as Random Forest, are generally invariant to feature scaling since the decision tree only splits a node based on the available features. While there is little consequence of applying feature scaling to the data building decision tree-based ML models, hyperparameters specific to these models typically require further tuning to improve their predictive capabilities.
 
-
-
-GENERATE PLOTS
+In light of this, we employ the min-max technique to scale our data. We instantiate the ```MinMaxScaler()``` function from the imported ```sklearn.preprocessing``` library, then first fit and transform the scaler to the training data before applying the same transformation to the testing data.
 ```python
-# Convert Xtrain_rescaled to a dataframe for easier plotting
-Xtrain_rescaled_df = pd.DataFrame(Xtrain_rescaled)
+# Instantiate MinMaxScaler() function
+scaler = MinMaxScaler(feature_range = (0, 1))
+# Fit and transform the scaler to the training data
+X_train_scaled = scaler.fit_transform(X_train)
+# Transform the testing data using the scaler previously fitted to the training data
+X_test_scaled = scaler.transform(X_test)
+```
+Now that the training and testing data have been successfully imputed, encoded and scaled, we proceed with generating the histograms of the 15 total features comprising the ```X_train_scaled```.
+```python
+# Convert X_train_scaled to a dataframe for easier plotting
+X_train_scaled_df = pd.DataFrame(X_train_scaled)
 # Initialise (5 x 3) axes for subplots of histograms (there are 15 numerical features after encoding)
 sp_row = 5
 sp_col = 3
 # Reshape num_cols for convenient indexing later on
-num_rescaled_col_reshape = np.reshape(Xtrain_rescaled_df.columns, (sp_row, sp_col))
+num_rescaled_col_reshape = np.reshape(X_train_scaled_df.columns, (sp_row, sp_col))
 # Set number of bins to be the square root of the total number of samples
-num_samples = Xtrain_rescaled_df.shape[0]
+num_samples = X_train_scaled_df.shape[0]
 num_bins = int(np.ceil(np.sqrt(num_samples)))
 # Instantiate subplot from matplotlib.pyplot
 fig, axs = plt.subplots(sp_row, sp_col)
@@ -614,8 +621,8 @@ fig, axs = plt.subplots(sp_row, sp_col)
 for i in np.arange(sp_row):
     # Iterate over columns of subplot
     for j in np.arange(sp_col):
-        # Plot histogram for corresponding column index of Xtrain_rescaled dataframe
-        axs[i,j].hist(Xtrain_rescaled_df[num_rescaled_col_reshape[i,j]], bins = num_bins, edgecolor = 'black', linewidth = 1.2)
+        # Plot histogram for corresponding column index of X_train_scaled dataframe
+        axs[i,j].hist(X_train_scaled_df[num_rescaled_col_reshape[i,j]], bins = num_bins, edgecolor = 'black', linewidth = 1.2)
         axs[i,j].set_xlabel(num_col_reshape[i,j] + ' - ' + feature_character_reshape[i,j], fontsize = 10)
         axs[i,j].set_ylabel('Frequency')
 ```
