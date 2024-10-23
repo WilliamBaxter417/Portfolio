@@ -590,9 +590,9 @@ for i in np.arange(sp_row):
 ![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_encoded_numerical_features_after_preprocessing.png)
 
 ### 3.4 Scaling the feature values
-In Section 2, we saw how the values of feature A15 (income) are several orders of magnitude greater than the other numerical features. For datasets like this, significant variations in feature values can bias the performance of the ensuing ML model. To circumvent this, feature scaling techniques are applied to the training and testing datasets, with the most common being the standard scaler and min-max scaler. The former technique standardises the data by scaling it to have a mean of 0 and a standard deviation of 1, while the latter technique normalises the data by scaling it between 0 and 1. While there are other techniques, each with their own caveats, the decision for which to apply typically depends on the ML algorithm being used.
+In Section 2, we saw how the values of feature A15 (income) are several orders of magnitude greater than the other numerical features. For datasets like this, significant variations in feature values can bias the performance of the ensuing ML model. To circumvent this, feature scaling techniques are applied to the training and testing data, with the most common being the standard scaler and min-max scaler. The former technique standardises the data by scaling it to have a mean of 0 and a standard deviation of 1, and the latter technique normalises the data by scaling it between 0 and 1. While there are other techniques, each with their own caveats, the decision on applying feature scaling to the data ultimately depends on the ML algorithm being used.
 
-For this project, we will be using the ML methods of logistic regression, KNN and random forest, which all fall under the umbrella of classification models. For logistic regression, the underlying algorithm employs the principles of gradient descent to effect the optimisation technique. For these types of ML models, feature scaling can assist the gradient descent to converge more quickly towards the minima. For KNN, distance-based algorithms are normally employed, whereby the distance between data points is used to determine their similarity and classification. As such, ML models which utilise distance based algorithms, such as KNN, are highly sensitive to feature scaling. On the other hand, the decision tree algorithm underlying random forest, and those of other decision tree-based ML models, are generally invariant to feature scaling as the decision tree only splits a node based on a single feature.
+For this project, we will be using the ML methods of Logistic Regression, KNN and Random Forest, which all fall under the umbrella of classification models. For Logistic Regression, the underlying algorithm employs the principles of gradient descent to effect the optimisation technique. For these types of ML models, feature scaling can assist the gradient descent to converge more quickly towards the minima. For KNN, distance-based algorithms are normally employed, whereby the distance between data points is used to determine their similarity and thus their classifications. Given this dependency on distance-based algorithms, ML models which utilise this method, such as KNN, are highly sensitive to feature scaling. On the other hand, the algorithms underlying decision tree-based ML models, such as Random Forest, are generally invariant to feature scaling since the decision tree only splits a node based on available feature.
 
 
 
@@ -651,8 +651,15 @@ We quickly discuss the two main approaches towards the management of outliers an
 
 
 ### 4. ML models
+- Insert logistic regression section.
+- Insert discussion for accuracy vs roc auc in our case
+- Insert KNN section
+- Insert RF section
 
-PUT THIS WHEN YOU START TALKING ABOUT OPTIMISING THE KNN
+KNN
+- Begin by iterating through nearest neighbour values to determine optimal k value.
+
+DISCUSSION FOR USING ACCURACY TO GAUGE OPTIMAL HYPERPARAMETER INSTEAD OF ROC AUC
 - We saw earlier that the number of approved vs. declined application statuses are relatively similar, which implies that our data is balanced.
 - If our data is balanced, then we may use the accuracy scores instead of the ROC AUC curves to tune any significant hyperparameters within the ML models (we only tune the KNN and Random Forest models). For imbalanced data, higher accuracy scores give misleading interpretations of the performance of the ML model, as all observations can be easily classified to the majority class. In such cases involving imbalanced data, the ROC AUC curves provide a much better metric.
 
