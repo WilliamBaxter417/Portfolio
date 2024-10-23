@@ -603,7 +603,7 @@ X_train_scaled = scaler.fit_transform(X_train)
 # Transform the testing data using the scaler previously fitted to the training data
 X_test_scaled = scaler.transform(X_test)
 ```
-Now that the training and testing data have been successfully imputed, encoded and scaled, we proceed with generating the histograms of the 15 total features comprising the ```X_train_scaled```.
+Now that the training and testing data have been successfully imputed, encoded and scaled, we proceed with regenerating the histograms of the 15 total features comprising the ```X_train_scaled```.
 ```python
 # Convert X_train_scaled to a dataframe for easier plotting
 X_train_scaled_df = pd.DataFrame(X_train_scaled)
@@ -628,13 +628,13 @@ for i in np.arange(sp_row):
 ```
 ![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/hist_scaled_numerical_features_after_preprocessing.png)
 
-Although a number of techniques could be implemented to more rigorously determine which distribution each feature conforms to, we may invoke the Central Limit Theorem (CLT) to sensibly assume that all features are normally distributed. This suggests that during preprocessing, we could apply the standard approach of identifying outliers to be those data points situated further than 3 standard deviations from the mean. To provide a better visualisation of these outliers, we generate the boxplots for those numerical features A2, A3, A8, A11, A14 and A15.
+With the data now normalised, we confirm our previous mentioning of how the distributions for the numerical features A2, A3, A8, A11, A14 and A15 are heavy-tailed and skewed to the right. Currently, further statistical methods could be employed to more rigorously analyse the dataset, whose information would assist with interpreting those predictions returned by the ML models. For example, descriptive statistical methods could be used to provide insight into the central tendency, spread, and shape of these distributions, along with their means, medians and modes. We could also apply statistical tests, such as the Shapiro-Wilk test or the Kolmogorov-Smirnov test, to assess whether the data is truly normal. However, to remain within the scope of this project, we simplify the statistical analyses by invoking the Central Limit Theorem (CLT) to assume that all numerical features are normally distributed. Following this assumption, we could apply the standard approach of identifying outliers to be those data points situated further than 3 standard deviations from the mean. To visualise this, we generate the boxplots for features A2, A3, A8, A11, A14 and A15.
 ```python
 # Initialise (2 x 3) axes for subplots of histograms (there are 6 numerical features)
 sp_row = 2
 sp_col = 3
 # Array of numerical characteristics
-num_idx = np.where(Xfeatures.dtypes != 'O')[0]
+num_idx = np.where(X_features.dtypes != 'O')[0]
 num_idx_reshape = np.reshape(num_idx, (sp_row, sp_col))
 feature_character_num = np.array(feature_character)[num_idx]
 feature_character_num_reshape = np.reshape(feature_character_num, (sp_row, sp_col))
@@ -645,14 +645,19 @@ for i in np.arange(sp_row):
     # Iterate over columns of subplot
     for j in np.arange(sp_col):
         # Plot boxplot for corresponding column index of Xfeature dataframe
-        axs[i,j].boxplot(Xtrain_rescaled_df[num_idx_reshape[i,j]], vert = 0, sym = 'rs', positions=[0], widths=[0.3])
+        axs[i,j].boxplot(X_train_scaled_df[num_idx_reshape[i,j]], vert = 0, sym = 'rs', positions=[0], widths=[0.3])
         axs[i,j].set_xlabel(num_col_reshape[i,j] + ' - ' + feature_character_num_reshape[i,j], fontsize = 10)
         axs[i,j].get_yaxis().set_ticks([])
         plt.tight_layout()
 ```
 ![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/box_scaled_numerical_features.png)
 
-THEN GIVE DISCUSSION ABOUT OUTLIERS:
+As expected, all numerical features contain outliers, with a large number comprising features A2 (age), A3 (debt), A8 (years of employment), A11 (credit score) and A15 (income).
+- While this preliminary examination would suggest we remove these outliers from the training data before building our ML models, this may actually prove detrimental to our purposes. To clarify, we quickly discuss the two main approaches overarching the management of outliers and their underlying caveats. The first approach involves removing any outliers before training the ML model under the hypothesis that this would increase the statistical power, improve model accuracy and reduce underfitting. However, these extreme values may instead indicate anomalies within the data, not necessarily 'outliers' in the traditional sense. Then without first discriminating whether these values are truly outliers, their removal could prevent us from testing the model's performance using anomalies representative of what could naturally occur in practice.
+- Meanwhile, the second approach involves preserving the outliers under the assumption that these extreme values do not derive from any measurement or processing errors, incorrect data entry or poor sampling. In this case, the 'outliers' are considered to be statistically significant and should be incorporated into the development of an 'accurate' ML model. Thus, the disadvantages of this approach are contrary to the advantages of the first; a decrease in statistical power and reduction in model accuracy. Thus, the decision to remove outliers is typically context dependent and generally left to the analyst's discretion.
+- For our case, and to contain our efforts within the project scope, we simplify matters by relating the characteristics pertaining to these features possessing outliers (age, debt, years of employment, credit score and income) to the context of the dataset. We generalise that the decision to approve or deny a credit card application is ultimately multi-facted, and how despite these characteristics serving as strong indicators for a successful approval, we can be confident that the banking institution adopts strict data entry practices. In conjunction with the standard policies normally practiced by these institutions, such as thorough examinations of a customer's credit score, debt and income, the possibility that these values are truly outliers can be assumed to be low.
+
+
 
 We quickly discuss the two main approaches towards the management of outliers and their underlying caveats. The first approach involves removing any outliers before splitting the data into its training and testing sets. This ensures consistency throughout the entire dataset as their removal would adjust the means and variances of the numerical features, thereby affecting any imputation methods applied later on. While their exclusion would positively influence the robustness of the ML model, we can no longer assess its performance with anomalous values that would simulate fringe cases in practice. Meanwhile, the second approach involves removing any outliers after splitting the data. In this case, outliers are removed only from the training set in order to reduce any skewed analyses or inaccuracies in the model, while those within the testing set are preserved to give better insight to its performance. Consequently, the means and variances corresponding to the training set may not accurately reflect what could otherwise be considered their 'true' values, and would influence the statistics used to train the model. Thus, the decision to remove outliers from any dataset, whether before or after splitting, is typically context dependent and generally left to the analyst's discretion. In our case, we will inspect the numerical features for any outliers before moving to the data preprocessing stage. Furthermore, given how the features of this dataset most likely reflect those characteristics outlined in Section 3.1 (gender, age, debt, marital status, etc), we can intuit that any 'outliers' would be "true" outliers; not being representative of any measurement or processing errors, data entry or poor sampling. Thus, we deem it appropriate to preserve any outliers and for their inclusion during the training and testing stages of the ML models.
 
