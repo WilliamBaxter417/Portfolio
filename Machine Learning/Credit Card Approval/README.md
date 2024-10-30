@@ -213,9 +213,9 @@ Before preprocessing the data to impute any missing values and perform feature s
 # Extract targets
 y = credit_df['A16']
 # Extract features
-Xfeatures = credit_df.drop(['A16'], axis = 1)
+X_features = credit_df.drop(['A16'], axis = 1)
 ```
-Now, we generate the corresponding histograms for those numerical features comprising the ```Xfeatures``` dataframe. To generalise our implementation for scalability, we create a module called ```CCASubs``` and within it, develop a function to automatically extract the column header names for those categorical and numerical features.
+Now, we generate the corresponding histograms for those numerical features comprising the ```X_features``` dataframe. To generalise our implementation for scalability, we create a module called ```CCASubs``` and within it, develop a function to automatically extract the column header names for those categorical and numerical features.
 ```python
 ## EXTRACTS HEADER NAMES OF CATEGORICAL AND NUMERICAL COLUMNS IN DATAFRAME
 ## INPUTS:
@@ -244,13 +244,13 @@ def get_categorical_numerical_headers(df):
 
     return obj_col, num_col
 ```
-Importing the ```CCASubs``` module containing the ```get_categorical_numerical_headers()``` function, we extract the header names for the categorical and numerical features from ```Xfeatures```.
+Importing the ```CCASubs``` module containing the ```get_categorical_numerical_headers()``` function, we extract the header names for the categorical and numerical features from ```X_features```.
 ```python
 # Import module containing the impute_train_test function
 import CCASubs
 
 # Get header names for the categorical and numerical columns
-cat_cols, num_cols = CCASubs.get_categorical_numerical_headers(Xfeatures)
+cat_cols, num_cols = CCASubs.get_categorical_numerical_headers(X_features)
 ```
 Generate the histograms for those numerical features using ```num_cols```.
 ```python
@@ -262,17 +262,17 @@ sp_col = 3
 # Reshape num_cols for convenient indexing later on
 num_col_reshape = np.reshape(num_cols, (sp_row, sp_col))
 # Set number of bins to be the square root of the total number of samples
-num_samples = Xfeatures.shape[0]
+num_samples = X_features.shape[0]
 num_bins = int(np.ceil(np.sqrt(num_samples)))
+# Get header indices corresponding to numerical features
+num_idx = np.where(X_features.dtypes != 'O')[0]
+# Reshape num_idx for easier indexing when labelling
+num_idx_reshape = np.reshape(num_idx, (sp_row, sp_col))
 # Array of characteristics
 feature_character = ['Gender', 'Age', 'Debt', 'Marital status', 'Bank customer type', 'Education level', 'Ethnicity', 'Years of Employment', 'Prior default', 'Employment status', 'Credit score', 'Drivers license type', 'Citizenship status', 'Zipcode', 'Income']
 feature_character_num = np.array(feature_character)[num_idx]
 # Reshape characteristics array for easier indexing when labelling
 feature_character_num_reshape = np.reshape(feature_character_num, (sp_row, sp_col))
-# Get header indices corresponding to numerical features
-num_idx = np.where(Xfeatures.dtypes != 'O')[0]
-# Reshape num_idx for easier indexing when labelling
-num_idx_reshape = np.reshape(num_idx, (sp_row, sp_col))
 # Instantiate subplot from matplotlib.pyplot
 fig, axs = plt.subplots(sp_row, sp_col)
 # Iterate over rows of subplot
@@ -280,7 +280,7 @@ for i in np.arange(sp_row):
     # Iterate over columns of subplot
     for j in np.arange(sp_col):
         # Plot histogram for corresponding column index of Xfeature dataframe
-        axs[i,j].hist(Xfeatures[num_col_reshape[i,j]], bins = num_bins, edgecolor = 'black', linewidth = 1.2)
+        axs[i,j].hist(X_features[num_col_reshape[i,j]], bins = num_bins, edgecolor = 'black', linewidth = 1.2)
         axs[i,j].set_xlabel(num_col_reshape[i,j] + ' - ' + feature_character_num_reshape[i,j], fontsize = 10)
         axs[i,j].set_ylabel('Frequency')
         plt.tight_layout
@@ -321,8 +321,9 @@ Before continuing, we make two remarks: first, it is important to impute any mis
 In Section 1, our characterisation of the anonymised features gave further insight to the nature of the dataset. Now with this contextual knowledge, we identify how _feature selection_ could be exercised before splitting our data into its training and testing sets. For instance, columns A12 and A14 could be dropped prior to splitting, as drivers license type and zipcode could be declared as relatively minor factors compared to the other characteristics when deciding the approval of a credit card application. This small-scale example of feature selection supports how good feature selection practices can facilitate ML modelling by reducing the number of overall features and the introduction of noise to the dataset; improving the performance, efficiency, and interpretability of the ML model. In practice however, a more robust method for determining which features are relevant for inclusion would involve measuring the statistical correlation between the available features along with the targets. Since this is beyond the scope of the project, we ignore this process and leave all features within the dataset intact. We then split the features and targets variables into their training and testing sets:
 ```python
 # Split Xfeatures into training and testing sets
-Xtrain, Xtest, ytrain, ytest = train_test_split(Xfeatures, y, test_size = 0.33, random_state = 42)
+X_train, X_test, y_train, y_test = train_test_split(X_features, y, test_size = 0.2, random_state = 42, stratify = y)
 ```
+We quickly note that our above splitting of the data conforms to the popular "two-way holdout" method. Our decision for partitioning the data this way over the other popular "three-way holdout" method will be discussed further in Section 4. Also, note that we apply stratification when splitting the data. While a balanced dataset may render stratification unnecessary (especially for an already small and balanced dataset like ours), its application in our case statistically does no harm. Additionally, since our data is not a time series, stratification is sensible in this context.
 
 ### 3.2 Imputing the missing data
 Before discussing methods of imputing missing values in the training and testing datasets, we elaborate on our aforementioned choice of imputing the missing values over omitting those samples as a whole. As the total number of samples (690) comprising the original dataset is already small, then omitting any entirely could detract from the performance of the ensuing ML model. On the other hand, as only approximately 0.61% of the available values are missing, one could argue on reasonable grounds for their omission. However, conventional practice is to provide the predictive model with as much training data as possible so as to maximise support during the learning stage. Additionally, any remaining features from those samples containing missing values would still contribute towards fine-tuning the underlying ML algorithm and improving its robustness. 
@@ -654,29 +655,202 @@ for i in np.arange(sp_row):
 
 As expected, all numerical features contain outliers, with a large number comprising features A2 (age), A3 (debt), A8 (years of employment), A11 (credit score) and A15 (income). While this preliminary examination suggests we remove these outliers from the training data before building our ML models, this may not always work to our benefit. To clarify, we quickly discuss the two main approaches overarching the management of outliers and their underlying caveats. The first approach involves removing any outliers before training the ML model under the hypothesis that this would increase the statistical power, improve model accuracy and reduce underfitting. However, these extreme values may instead indicate anomalies within the data, not necessarily 'outliers' in the traditional sense. Then without first discriminating whether these values are truly outliers, their removal could prevent us from testing the model's performance using anomalies representative of what could naturally occur in practice. Meanwhile, the second approach involves preserving the outliers under the assumption that these extreme values do not derive from any measurement or processing errors, incorrect data entry or poor sampling. In this case, the 'outliers' are considered to be statistically significant and should be incorporated into the development of an 'accurate' ML model. Thus, the disadvantages of this approach are contrary to the advantages of the first; a decrease in statistical power and reduction in model accuracy. Thus, the decision to remove outliers is typically context dependent and generally left to the analyst's discretion. 
 
-For our case, and to keep our efforts within the project scope, we simplify matters by relating these characteristics (age, debt, years of employment, credit score and income) to the context of the data. Firstly, we are confident that banking institutions adhere to strict data entry practices. Thus, the possibility of these extreme values deriving from a clerical error is low. Secondly, the customer would have been carefully vetted throughout the approval process as per the standard policies normally in place. Then without taking other factors into account, the likelihood of a customer being approved or denied solely based on any one factor scoring undesirably can be assumed to be low. Finally, we generalise that the decision to approve or deny a credit card application is multi-facted and considers these characteristics as a whole to be reflective of a customer's unique situation. That is, the combination of these characteristics give the most influence towards a decision, without one characteristic necessarily being preferred over another. With these points in mind, we deem these outliers to be statistically significant and opt for their inclusion during the development of the ML models.
+For our case, and to keep our efforts within the project scope, we simplify matters by relating these characteristics (age, debt, years of employment, credit score and income) to the context of the data. Firstly, we are confident that banking institutions adhere to strict data entry practices. Thus, the possibility of these extreme values deriving from a clerical error is low. Secondly, the customer would have been carefully vetted throughout the approval process as per the standard policies normally in place. Then without taking other factors into account, the likelihood of a customer being approved or denied solely based on any one factor scoring undesirably can be assumed to be low. This can be generalised to how the decision to approve or deny a credit card application is multi-facted and considers these characteristics as a whole to be reflective of a customer's unique situation. That is, the combination of these characteristics give the most influence towards a decision, without one characteristic necessarily being preferred over another. With these points in mind, we deem these outliers to be statistically significant and opt for their inclusion during the development of the ML models.
 
 ## 4. Classification using Machine Learning
-With the data now preprocessed and staged for training, three ML methods will be used to implement a predictive model: Logistic Regression, KNN and Random Forest.
-- As previously mentioned, two of these methods, KNN and Random Forest, will require their hyperparameters to be tuned. This means their analysis will inevitably require some comparison to be made between their hyperparameter values and the respective performance of their predictive models.
-- Normally, such a task 
+With the data now preprocessed and ready for training, three ML algorithms will be implemented: Logistic Regression, KNN and Random Forest. As mentioned earlier, properly building their accompanying ML models requires determination of their hyperparameters. This is due to these hyperparmeters needing manual specification as the algorithms do not learn for these values from the training data. This is the motivation behind the validation set, which serves to avoid data leakage between the training data and testing data by offering the algorithm a separate partition of the original dataset with which to tune these hyperparameters. This leads to the traditional "three-way holdout" method, where the original data is partitioned into the following three sets: training, validation and testing. This way, a reasonable approach to tuning would entail iterating through combinations of hyperparameter values, using the training set to build a model specific to them, then evaluating its performance using the validation set. Once a model is found which optimises a desired performance metric, such as classification accuracy or Receiver Operating Characteristic (ROC) curve, those specific hyperparameters are reused along with a recombination of the training and validation sets to retrain the algorithm. Finally, the performance of the resulting model is assessed through a single application to the testing set. While this avoids any data leakage between the testing and training sets when tuning, reusing the validation set in each iteration introduces a performance bias to the final model and can result in overly optimistic estimates of its generalised performance. In essence, the validation set ironically leaks information to the training set. Meanwhile, for those scenarios involving smaller datasets (such as ours), partitioning via a three-way holdout while providing the algorithm with enough training data to reduce pessimistic bias is not always feasible; thus our partitioning via the two-way holdout method as seen in Section 3.1. To circumvent these issues as best as possible, we use the nested k-fold cross-validation method to tune the hyperparameters for these three algorithms.
+
 
 ### 4.1 Logistic Regression
-- Insert logistic regression section.
-- Insert discussion for accuracy vs roc auc in our case
+Now, we train the Logistic Regression model using the scaled training set. We begin by instantiating the classifier with default parameter values and fitting the model to the scaled training set.
+```python
+# Instantiate a LogisticRegression classifier with default parameter values
+logreg = LogisticRegression()
+# Fit logreg to the rescaled training set
+logreg.fit(X_train_scaled, y_train)
+```
+Generate predictions from the testing set using the now fitted Logistic Regression model.
+```python
+# Generate predictions from the test set using the Logistic Regression model
+y_predict_LR = logreg.predict(X_test_scaled)
+```
+Get the training accuracy and testing accuracy scores, confusion matrix and classification report of the model.
+```python
+# Get the training accuracy score of the Logistic Regression model
+print("Training accuracy of Logistic Regression classifier: ", logreg.score(X_train_scaled, y_train))
+# Get the testing accuracy score of the Logistic Regression model
+print("Testing accuracy of Logistic Regression classifier: ", logreg.score(X_test_scaled, y_test))
+# Print the confusion matrix and classification report of the Logistic Regression model
+print('Confusion matrix for Logistic Regression model:\n')
+print(confusion_matrix(y_test, y_predict_LR))
+print('Classification report for Logistic Regression model:\n')
+print(classification_report(y_test, y_predict_LR))
+```
+```python
+Training accuracy of Logistic Regression classifier:  0.8701298701298701
+Testing accuracy of Logistic Regression classifier:  0.8421052631578947
+
+Confusion matrix for Logistic Regression model:
+[[94  9]
+ [27 98]]
+
+Classification report for Logistic Regression model:
+              precision    recall  f1-score   support
+           +       0.78      0.91      0.84       103
+           -       0.92      0.78      0.84       125
+    accuracy                           0.84       228
+   macro avg       0.85      0.85      0.84       228
+weighted avg       0.85      0.84      0.84       228
+```
+Out of 228 instances, we see from the main diagonal of the confusion matrix that our model correctly predicted 192 instances (94 true negatives and 98 true positives), possessing a classification accuracy of approximately 84.2%. Given that the relative difference between the training and testing accuracies is only approximately 2.8%, we can conclude that our model is neither overfitting nor underfitting.
+
+
 
 ### 4.2 K-Nearest Neighbours
-- Insert KNN section
+To implement the KNN model, we begin by iterating through the ```n_neighbor``` hyperparameter of the ```KNeighborsClassifier``` function from the ```sklearn.neighbors``` library and store the corresponding error rate, training accuracy and testing accuracy.
+```python
+# Initialise arrays for error rate, training accuracy and testing accuracy
+err_rate_KNN = []
+train_acc_KNN = []
+test_acc_KNN = []
+# Test up to a maximum of 30 neighbours
+k_max = 30
+# Iterate through nearest neighbour values (k)
+for k in (np.arange(k_max) + 1):
+    # Train the KNN model with current iteration of k
+    knn = KNeighborsClassifier(n_neighbors = k)
+    # Fit model to the training data
+    knn.fit(X_train_scaled, y_train)
+    # Generate predictions using testing data
+    y_predict_KNN = knn.predict(X_test_scaled)
+    # Calculate error rate
+    err_rate_KNN.append(np.mean(y_predict_KNN != y_test))
+    # Fetch training accuracy score
+    train_acc_KNN.append(knn.score(X_train_scaled, y_train))
+    # Fetch testing accuracy score
+    test_acc_KNN.append(knn.score(X_test_scaled, y_test))
+```
+We then plot the error rate versus k value, training accuracy versus k value, and testing accuracy versus k value, with the training and testing accuracies being plotted on the same axes:
+```python
+## Generate subplots: (error rate vs. k) | (training accuracy vs. k, testing accuracy vs. k)
+## Plot error rate vs. k
+fig, axs = plt.subplots(1, 2, figsize = (10,6))
+axs[0].plot(np.arange(k_max) + 1, err_rate_KNN, ls = '-', color = 'black')
+axs[0].set_xlim(xmin = 0)
+axs[0].set_ylim(ymin = np.floor((np.min(err_rate_KNN) * 100)) / 100)
+axs[0].set_xlabel('k value')
+axs[0].set_ylabel('Error rate')
+axs[0].grid()
+## Plot training accuracy and testing accuracy vs. k
+# Generate dictionary using train_acc_KNN and test_acc_KNN
+KNN_train_test_acc_dict = {'train_acc_KNN': train_acc_KNN, 'test_acc_KNN': test_acc_KNN}
+# Build dataframe using dictionary KNN_train_test_acc_dict
+KNN_train_test_acc_df = pd.DataFrame(KNN_train_test_acc_dict)
+# Populate axes
+axs[1].plot(np.arange(k_max) + 1, KNN_train_test_acc_df['train_acc_KNN'], ls = '-', color = 'blue')
+axs[1].plot(np.arange(k_max) + 1, KNN_train_test_acc_df['test_acc_KNN'], ls = '--', color = 'blue')
+axs[1].set_xlim(xmin = 0)
+axs[1].set_xlabel('k value')
+axs[1].set_ylabel('Score')
+axs[1].legend(['Training', 'Testing'])
+axs[1].grid()
+```
+![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/knn_error_rate_train_test_score.png)
+
+We see from the plots that a value of ```k=5``` presents a suitable candidate for simultaneously optimising for the error rate, training accuracy and testing accuracy of our KNN model, giving an error rate of approximately 13.12%, and training and testing accuracy scores of approximately 87.66% and 86.84% respectively.
+
+We now retrain our KNN model using this optimised value.
+```python
+# Retrain the KNN model using the optimal k value (k = 5)
+knn_optimal_K5 = KNeighborsClassifier(n_neighbors = 5)
+knn_optimal_K5.fit(X_train_scaled, y_train)
+
+# Generate predictions from the test set using the optimised KNN model (k = 5)
+y_predict_KNN_optimal_K5 = knn_optimal_K5.predict(X_test_scaled)
+
+# Get the training accuracy score of the optimised KNN model
+print("Training accuracy of optimised KNN classifier (k = 5): ", knn_optimal_K5.score(X_train_scaled, y_train))
+# Get the testing accuracy score of the optimised KNN model
+print("Testing accuracy of optimised KNN classifier (k = 5): ", knn_optimal_K5.score(X_test_scaled, y_test))
+
+# Print the confusion matrix and classification report of the optimised KNN model
+print('Confusion matrix for optimised KNN model (k = 5):\n')
+print(confusion_matrix(y_test, y_predict_KNN_optimal_K5))
+print('Classification report for optimised KNN model (k = 5):\n')
+print(classification_report(y_test, y_predict_KNN_optimal_K5))
+```
+```python
+Training accuracy of optimised KNN classifier (k = 5):  0.8766233766233766
+Testing accuracy of optimised KNN classifier (k = 5):  0.868421052631579
+
+Confusion matrix for optimised KNN model (k = 5):
+[[ 91  12]
+ [ 18 107]]
+
+Classification report for optimised KNN model (k = 5):
+              precision    recall  f1-score   support
+           +       0.83      0.88      0.86       103
+           -       0.90      0.86      0.88       125
+    accuracy                           0.87       228
+   macro avg       0.87      0.87      0.87       228
+weighted avg       0.87      0.87      0.87       228
+```
+With this optimised value of ```k=5```, we see from the main diagonal of the confusion matrix that our model correctly predicted 198 out of the 228 total instances (91 true negatives and 107 true positives), possessing a classification accuracy of approximately 86.84%. Given that the relative difference between the training and testing accuracies is only approximately 0.82%, our optimised model is neither overfitting nor underfitting.
 
 ### 4.3 Random Forest
-- Insert RF section
+Similarly, we proceed with building our Random Forest model by first iterating through the ```n_estimators``` hyperparameter of the ```RandomForestClassifier``` function from the ```sklearn.ensemble``` library and store the corresponding error rate, training accuracy and testing accuracy. While a more rigorous procedure would also develop a separate loop to experimentally determine the optimal maximum depth for our Random Forest model, we simplify the matter by assigning the ```max_depth``` hyperparameter to 3 (with standard practice seeing this value conventionally drawn from a range of 3 to 15).
+```python
+# Initialise arrays for error rate, training accuracy and testing accuracy
+err_rate_RF = []
+train_acc_RF = []
+test_acc_RF = []
+# Test up to a maximum of 100 estimators
+n_max = 100
+# Iterate through number of estimators (n)
+for n in (np.arange(n_max) + 1):
+    # Train the Random Forest model with current iteration of number of estimators
+    rf = RandomForestClassifier(n_estimators = n, max_depth = 3)
+    # Fit model to the training data
+    rf.fit(X_train_scaled, y_train)
+    # Generate predictions using testing data
+    y_predict_RF = rf.predict(X_test_scaled)
+    # Calculate error rate
+    err_rate_RF.append(np.mean(y_predict_RF != y_test))
+    # Fetch training accuracy score
+    train_acc_RF.append(rf.score(X_train_scaled, y_train))
+    # Fetch testing accuracy score
+    test_acc_RF.append(rf.score(X_test_scaled, y_test))
+```
+We then plot the error rate versus number of estimators, training accuracy versus number of estimators, and testing accuracy versus number of estimators, with the training and testing accuracies being plotted on the same axes:
+```python
+## Generate subplots: (error rate vs. n) | (training accuracy vs. n, testing accuracy vs. n)
+## Plot error rate vs. n
+fig, axs = plt.subplots(1, 2, figsize = (10,6))
+axs[0].plot(np.arange(n_max) + 1, err_rate_RF, ls = '-', color = 'black')
+axs[0].set_xlim(xmin = 0)
+axs[0].set_ylim(ymin = np.floor((np.min(err_rate_RF) * 100)) / 100)
+axs[0].set_xlabel('Number of estimators (n)')
+axs[0].set_ylabel('Error rate')
+axs[0].grid()
+## Plot training accuracy and testing accuracy vs. k
+# Generate dictionary using train_acc_RF and test_acc_RF
+RF_train_test_acc_dict = {'train_acc_RF': train_acc_RF, 'test_acc_RF': test_acc_RF}
+# Build dataframe using dictionary KNN_train_test_acc_dict
+RF_train_test_acc_df = pd.DataFrame(RF_train_test_acc_dict)
+# Populate axes
+axs[1].plot(np.arange(n_max) + 1, RF_train_test_acc_df['train_acc_RF'], ls = '-', color = 'blue')
+axs[1].plot(np.arange(n_max) + 1, RF_train_test_acc_df['test_acc_RF'], ls = '--', color = 'blue')
+axs[1].set_xlim(xmin = 0)
+axs[1].set_xlabel('Number of estimators (n)')
+axs[1].set_ylabel('Score')
+axs[1].legend(['Training', 'Testing'])
+axs[1].grid()
+```
+![image](https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Credit%20Card%20Approval/images/rf_error_rate_train_test_score.png)
 
-KNN
-- Begin by iterating through nearest neighbour values to determine optimal k value.
 
-DISCUSSION FOR USING ACCURACY TO GAUGE OPTIMAL HYPERPARAMETER INSTEAD OF ROC AUC
-- We saw earlier that the number of approved vs. declined application statuses are relatively similar, which implies that our data is balanced.
-- If our data is balanced, then we may use the accuracy scores instead of the ROC AUC curves to tune any significant hyperparameters within the ML models (we only tune the KNN and Random Forest models). For imbalanced data, higher accuracy scores give misleading interpretations of the performance of the ML model, as all observations can be easily classified to the majority class. In such cases involving imbalanced data, the ROC AUC curves provide a much better metric.
+
+
 
 
 
