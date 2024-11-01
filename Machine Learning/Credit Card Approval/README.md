@@ -658,7 +658,10 @@ As expected, all numerical features contain outliers, with a large number compri
 For our case, and to keep our efforts within the project scope, we simplify matters by relating these characteristics (age, debt, years of employment, credit score and income) to the context of the data. Firstly, we are confident that banking institutions adhere to strict data entry practices. Thus, the possibility of these extreme values deriving from a clerical error is low. Secondly, the customer would have been carefully vetted throughout the approval process as per the standard policies normally in place. Then without taking other factors into account, the likelihood of a customer being approved or denied solely based on any one factor scoring undesirably can be assumed to be low. This can be generalised to how the decision to approve or deny a credit card application is multi-facted and considers these characteristics as a whole to be reflective of a customer's unique situation. That is, the combination of these characteristics give the most influence towards a decision, without one characteristic necessarily being preferred over another. With these points in mind, we deem these outliers to be statistically significant and opt for their inclusion during the development of the ML models.
 
 ## 4. Classification using Machine Learning
-With the data now preprocessed and ready for training, three ML algorithms will be implemented: Logistic Regression, KNN and Random Forest. As mentioned earlier, properly building their accompanying ML models requires a determination of their hyperparameters; a process within the machine learning stage referred to as 'tuning'. This is due to these hyperparmeters needing manual specification as the algorithms do not learn for these values from the training data. This is the motivation behind the validation set, which offers the algorithms a separate partition of the original data on which to tune these hyperparameters while avoiding any data leakage between the training and testing sets. This leads to the traditional "three-way holdout" method, where the original data is partitioned into a training, validation and testing set. This way, a reasonable approach to tuning would entail iterating through combinations of hyperparameter values, using these values and the training set to build a specific model, then evaluating its performance using the validation set. Once a model is found which optimises a desired performance metric, such as classification accuracy or Receiver Operating Characteristic (ROC) curve, its corresponding hyperparameters are then used to retrain the algorithm on a recombination of the training and validation sets. Finally, the performance of the resulting model is assessed through a single application to the testing set. While this method of tuning avoids any data leakage between the testing and training sets, reusing the validation set when iterating through hyperparameters introduces a performance bias to the final model and can result in overly optimistic estimates of its generalised performance. In essence, the validation set ironically leaks information to the training set. Meanwhile, for those scenarios involving smaller datasets (such as ours), partitioning via the three-way holdout method while providing the algorithm with enough training data to reduce pessimistic bias is not always feasible; thus our partitioning the data via the two-way holdout method in Section 3.1. To circumvent these issues as best as possible, we use the nested k-fold cross-validation method to tune the hyperparameters for these three algorithms.
+With the data now preprocessed and ready for training, three ML algorithms will be implemented: Logistic Regression, KNN and Random Forest. As mentioned earlier, properly building their accompanying ML models requires a determination of their hyperparameters; a process within the machine learning stage referred to as 'tuning'. This is due to these hyperparmeters needing manual specification as the algorithms do not learn for these values from the training data. This is the motivation behind the validation set, which offers the algorithms a separate partition of the original data on which to tune these hyperparameters while avoiding any data leakage between the training and testing sets. This leads to the traditional "three-way holdout" method, where the original data is partitioned into a training, validation and testing set. This way, a reasonable approach to tuning would entail iterating through combinations of hyperparameter values, using these values and the training set to build a specific model, then evaluating its performance using the validation set. Once a model is found which optimises a desired performance metric, such as classification accuracy or Receiver Operating Characteristic (ROC) curve, its corresponding hyperparameters are then used to retrain the algorithm on a recombination of the training and validation sets. Finally, the performance of the resulting model is assessed through a single application to the testing set. While this method of tuning avoids any data leakage between the testing and training sets, reusing the validation set when iterating through hyperparameters biases the final model to this data and can result in overly optimistic estimates of its generalised performance. In essence, the validation set ironically leaks information to the training set. Meanwhile, for those scenarios involving smaller datasets (such as ours), partitioning via the three-way holdout method while providing the algorithm with enough training data to reduce pessimistic bias (model capacity) is not always feasible; thus our partitioning the data via the two-way holdout method in Section 3.1. The following subsection delineates our application of a method that addresses these shortcomings brought about from the small dataset.
+
+### 4.1 Hyperparameter Tuning via Nested k-fold Cross-Validation
+To circumvent these issues as best as possible, we use the well-known nested k-fold cross-validation method to tune the hyperparameters for these three algorithms. This method entails a robust procedure for experimentally performing hyperparameter tuning on smaller datasets without succumbing to data leakage. Such a method also enables us to compare the generalised performances of the algorithms under test as each data point is used during validation.
 
 We begin by initialising the three classifiers.
 ```python
@@ -667,10 +670,10 @@ clf1 = LogisticRegression(solver = 'newton-cg', random_state = 42)
 clf2 = KNeighborsClassifier(algorithm = 'ball_tree')
 clf3 = RandomForestClassifier(random_state = 42)
 ```
-We then set up a dictionary of parameters for the grid search method to use during the nested k-fold cross-validation.
+We then set up a dictionary of parameters for the grid search method to use during the nested k-fold cross-validation. To simplify matters for this project, we tune for only one parameter for each of the algorithms: the penalty for Logistic Regression (none or L2), the number of neighbours for KNN, and the maximum tree depth for Random Forest. Note that this code can be easily expanded to include any other hyperparameters and combinations thereof for these algorithms, and others.
 ```python
 # Setting up the parameter grids
-param_grid1 = [{'penalty': ['l2']}]
+param_grid1 = [{'penalty': ['l2'] + [None]}]
 param_grid2 = [{'n_neighbors': list(range(1, 10))}]
 param_grid3 = [{'max_depth': list(range(1, 10)) + [None]}]
 ```
@@ -679,6 +682,137 @@ Initialise an array whose elements contain a GridSearchCV object for each algori
 # Initialise array of GridSearchCV objects
 gridcvs = {}
 ```
+Now, generate the train/test split indices for the inner loop of the nested k-fold cross validation. For the inner loop, we apply a 2-fold cross-validation. Then, use a for loop to iterate through classifiers ```clf1```, ```clf2``` and ```clf3``` and initialise an exhaustive parameter grid search for each, whose grids are respectively specified by ```param_grid1```, ```param_grid2``` and ```param_grid3```.
+```python
+# Generate train/test split indices for inner loop of cross-validation
+inner_cv = StratifiedKFold(n_splits = 2, shuffle = True, random_state = 42)
+# Generate array containing a GridSearchCV object for each estimator
+for pgrid, est, name in zip((param_grid1, param_grid2, param_grid3), (clf1, clf2, clf3), ('LR', 'KNN', 'RF')):
+    gcv = GridSearchCV(estimator = est, param_grid = pgrid, scoring = 'accuracy', n_jobs = 1, cv = inner_cv, verbose = 0, refit = True)
+    gridcvs[name] = gcv
+```
+Generate the train/test split indices for the outer loop of the nested k-fold cross validation. For the outer loop, we apply a 5-fold cross-validation. We then parse the ```gridcvs``` array to a for loop which executes the nested k-fold cross-validation method using ```cross_val_score```.
+```python
+# Generate train/test split indices for outer loop of cross-validation
+outer_cv = StratifiedKFold(n_splits = 5, shuffle = True, random_state = 42)
+# Perform nested k-fold cross validation
+for name, gs_est in sorted(gridcvs.items()):
+    nested_score = cross_val_score(gs_est, X = X_train_scaled, y = y_train, cv = outer_cv, n_jobs = 1)
+    print('%s | outer ACC: %f%% +- %f' % (name, nested_score.mean() * 100, nested_score.std() * 100))
+print('\n')
+```
+This generates the following results:
+```python
+KNN | outer ACC: 87.149877% +- 3.406925
+LR | outer ACC: 87.511876% +- 2.711699
+RF | outer ACC: 88.597871% +- 2.849419
+```
+We see that all three models exhibit good performance and give similar accuracy scores, with the Random Forest algorithm scoring the highest. 
+
+### 4.2 Retraining with Optimised Hyperparameters
+We now retrain the algorithms using their optimised hyperparameters on the complete training set ```X_train_scaled``` to assess their generalised performances. Note that we first assign ```target_names``` as an array containing the labels ```-``` and ```+``` for the two target classes, in that order, so as to remain consistent with the output of the ```confusion_matrix``` method from the ```sklearn.metrics``` library. Here, ```-``` indicates the class of rejected applications while ```+``` indicates the class of approved applications, with us referring to these classes as 'negative' and 'positive' respectively.
+```python
+# Assign target names contingent to formatting of output from sklearn.metrics.confusion_matrix
+target_names = ['-', '+']
+# Retrain classifiers with optimised hyperparameters and print their scores
+for i, name in enumerate(list(('LR', 'KNN', 'RF'))):
+    print('//-----' + name + '-----//\n')
+    opt_algo = gridcvs[name]
+    opt_algo.fit(X_train_scaled, y_train)
+    train_acc = accuracy_score(y_true = y_train, y_pred = opt_algo.predict(X_train_scaled))
+    test_acc = accuracy_score(y_true = y_test, y_pred = opt_algo.predict(X_test_scaled))
+    conf_matrix = confusion_matrix(y_true = y_test, y_pred = opt_algo.predict(X_test_scaled))
+    class_report = classification_report(y_true = y_test, y_pred = opt_algo.predict(X_test_scaled), target_names = target_names)
+
+    print('Accuracy (averaged over CV test folds): %f%%\n' % (opt_algo.best_score_ * 100))
+    print('Best parameters: %s\n' % opt_algo.best_params_)
+    print('Training accuracy: %f%%\n' % (train_acc * 100))
+    print('Testing accuracy: %f%%\n' % (test_acc * 100))
+    print('Confusion matrix: \n')
+    print(conf_matrix)
+    print('Classification report: \n')
+    print(class_report)
+```
+```python
+//-----LR-----//
+Accuracy (averaged over CV test folds): 86.956522%
+Best parameters: {'penalty': 'l2'}
+Training accuracy: 87.862319%
+Testing accuracy: 78.985507%
+Confusion matrix: 
+[[53  8]
+ [21 56]]
+Classification report: 
+              precision    recall  f1-score   support
+           -       0.72      0.87      0.79        61
+           +       0.88      0.73      0.79        77
+    accuracy                           0.79       138
+   macro avg       0.80      0.80      0.79       138
+weighted avg       0.80      0.79      0.79       138
+
+//-----KNN-----//
+Accuracy (averaged over CV test folds): 86.956522%
+Best parameters: {'n_neighbors': 8}
+Training accuracy: 88.949275%
+Testing accuracy: 81.159420%
+Confusion matrix: 
+[[52  9]
+ [17 60]]
+Classification report: 
+              precision    recall  f1-score   support
+           -       0.75      0.85      0.80        61
+           +       0.87      0.78      0.82        77
+    accuracy                           0.81       138
+   macro avg       0.81      0.82      0.81       138
+weighted avg       0.82      0.81      0.81       138
+
+//-----RF-----//
+Accuracy (averaged over CV test folds): 87.500000%
+Best parameters: {'max_depth': 3}
+Training accuracy: 89.673913%
+Testing accuracy: 84.057971%
+Confusion matrix: 
+[[47 14]
+ [ 8 69]]
+Classification report: 
+              precision    recall  f1-score   support
+           -       0.85      0.77      0.81        61
+           +       0.83      0.90      0.86        77
+    accuracy                           0.84       138
+   macro avg       0.84      0.83      0.84       138
+weighted avg       0.84      0.84      0.84       138
+```
+### 4.3 Results and Evaluation
+Firstly, inspect the training and testing accuracies for the three models. We see that for all three classifiers, their training accuracies are within sensible percentage margins and reflect that none of the models appear to be overfitting. This is particularly so for the RF model, as tree-based models are usually more prone to overfitting. However, its training accuracy of ~89.67% indicates there is still a good degree of generalised performance; likewise for the LR and KNN models. Meanwhile, compared to their training accuracies, the testing accuracy of the LR model exhibits a -8.876812% difference, the KNN model a -7.789855% difference, and the RF model a -5.615942% difference; the testing accuracies for all models lie within -10% of their training accuracies. At this point of our discussion, we make the following remark: contingent with how a nested k-fold cross-validation procedure enables a fairer assessment of the best competing model, it would be remiss for us to conclude from just the training and testing accuracies alone that the RF model is better overall. This is because the determination of which model is truly 'better' is a much more complex matter. A true determination should require us to not only consider other useful statistical metrics (such as ROC AUC scores, etc) and methods of analyses (such as the Bayesian Test or McNemar's Test), but to look further beyond them. That is, despite how these metrics help quantify a model's performance, the determination of which is better is ultimately domain-specific and shoulder consider the context and importance of each metric with regards to the specific application. In essence, a top-down approach is normally exercised: for a classification problem, this could involve firstly prioritising the classifications, then working backwards to conceptualise how proxy metrics such as false negative and false positive percentages can bias these priorities accordingly, followed by assessing an array of ML models through a battery of relevant metrics, along with any further statistical analyses.
+
+Given these complexities, and to avoid further extending this body of work, we proceed to cross-examine our three models using only the above metrics and relating them to the context of credit card application approvals. While simplified in nature, this approach already succeeds in achieving the initial outcome of this project, which was to further consolidate on our understanding of those principles fundamental to machine learning. A more rigorous analyses utilising more involved statistical metrics will become the subject of future work.
+
+#### 4.3.1 Comparison based on precision score
+For the positive class, we see the precision obtained by LR was 88%, KNN was 87%, and RF was 83%. For the negative class, the precision obtained by LR was 72%, KNN was 75% and RF was 85%. Based on this metric alone, the LR model attains the highest precision of 88% for the positive class, while RF attains the highest precision of 85% for the negative class.
+
+#### 4.3.2 Comparison based on recall score
+For the positive class, we see the recall obtained by LR was 73%, KNN was 78%, and RF was 90%. For the negative class, the recall obtained by LR was 87%, KNN was 85%, and RF was 77%. Based on this metric alone, the RF model attains the highest recall of 90% for the positive class, while LR attains the highest recall of 87% for the negative class.
+
+#### 4.3.3 Comparison based on F1 score
+For the positive class, we see the F1 score obtained by LR was 79%, KNN was 82%, and RF was 86%. For the negative class, the F1 score obtained by LR was 79%, KNN was 80%, and RF was 81%. Based on this metric alone, the RF model attained the highest F1 scores for both the positive and negative classes, of 86% and 81% respectively.
+
+Highly precise models are cautious of giving positive predictions because false positives are bad.
+High recall models are cautious of giving negative predictions because false negatives are bad.
+- In terms of positive class (application is approved), the bank should aim to minimise the occurrence of false negatives. This means a model with a higher recall score would prove more beneficial for correctly the approval of an application 
+
+
+## 5. Conclusion and Future Work
+
+
+
+
+
+
+
+
+
+
+
 
 
 ### 4.1 Logistic Regression
