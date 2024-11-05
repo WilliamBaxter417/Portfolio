@@ -1,9 +1,13 @@
 # Predicting Credit Card Approvals using Machine Learning
-Credit card approvals comprise the many types of applications received by modern commerical banking institutions. A variety of metrics are used to determine an individual's successful credit card approval, inluding their age, income and credit score. With the growing number of these applications, their manual analysis is often time-consuming and can be subject to error. Machine learning methods provide an effective solution for automating this process, which ultimately involves a classification task, i.e. the application is either accepted or denied. For this project, we will build a predictor which automates the credit card approval process via machine learning methods, selecting the following three classification algorithms: Logistic Regression, k-nearest neighbours (KNN) and Random Forest.
+Credit card approvals comprise the many types of applications received by modern commerical banking institutions. A variety of metrics are used to determine an individual's successful credit card approval, inluding their age, income and credit score. With the growing number of these applications, their manual analysis is often time-consuming and can be subject to error. Machine learning methods provide an effective solution for automating this process, which ultimately involves a classification task, i.e. the application is either accepted or denied. For this project, we build a predictor which automates the credit card approval process via machine learning methods using the following three classification algorithms: Logistic Regression (LR), k-Nearest Neighbours (KNN) and Random Forest (RF). We organise this document according to those steps comprising the general data science pipeline. The following table of contents summarises these sections:
+- Section 1: &nbsp;Import Packages and Dataset
+- Section 2: &nbsp;Data Exploration
+- Section 3: &nbsp;Preprocessing the data
+- Section 4: &nbsp;Classification using Machine Learning
+- Section 5: &nbsp;Results and Evaluation
+- Section 6: &nbsp;Conclusion and Future Work
 
-The 
-
-## 0. Import Packages
+## 1. Import Packages and Dataset
 We begin by importing the necessary Python libraries.
 ```python
 # Math and Plotting libraries
@@ -23,7 +27,6 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 ```
 
-## 1. Import dataset
 This project utilises the [credit card approval dataset](https://archive.ics.uci.edu/dataset/27/credit+approval) imported from the UCI Machine Learning Repository which has been anonymised for confidentiality. We import the dataset as follows:
 ```python
 # Import UC Irvine Machine Learning Repository
@@ -785,23 +788,23 @@ Classification report:
 weighted avg       0.84      0.84      0.84       138
 ```
 
-### 4.3 Results and Evaluation
+## 5. Results and Evaluation
 Firstly, inspect the training and testing accuracies for the three models. We see that for all three classifiers, their training accuracies are within sensible percentage margins and reflect that none of the models appear to be overfitting. This is particularly so for the RF model, as tree-based models are usually more prone to overfitting. However, its training accuracy of ~89.67% indicates there is still a good degree of generalised performance; likewise for the LR and KNN models. Meanwhile, compared to their training accuracies, the testing accuracy of the LR model exhibits a -8.876812% difference, the KNN model a -7.789855% difference, and the RF model a -5.615942% difference; the testing accuracies for all models lie within -10% of their training accuracies. At this point of our discussion, we make the following remark: contingent with how a nested k-fold cross-validation procedure enables a fairer assessment of the best competing model, it would be remiss for us to conclude from just the training and testing accuracies alone that the RF model is better overall. This is because the determination of which model is truly 'better' is a much more complex matter. A true determination should require us to not only consider other useful statistical metrics (such as ROC AUC scores, etc) and methods of analyses (such as the Bayesian Test or McNemar's Test), but to look further beyond them. That is, despite how these metrics help quantify a model's performance, the determination of which is better is ultimately domain-specific and shoulder consider the context and importance of each metric with regards to the specific application. In essence, a top-down approach is normally exercised: for a classification problem, this could involve firstly prioritising the classifications, then working backwards to conceptualise how proxy metrics such as false negative and false positive percentages can bias these priorities accordingly, followed by assessing an array of ML models through a battery of relevant metrics, along with any further statistical analyses.
 
 Given these complexities, and to avoid further extending this body of work, we proceed to cross-examine our three models using only the above metrics and relating them to the context of credit card application approvals. While simplified in nature, this approach already succeeds in achieving the initial outcome of this project, which was to further consolidate on our understanding of those principles fundamental to machine learning. We note that more rigorous analyses utilising more involved statistical metrics will become the subject of future work.
 
-#### 4.3.1 Comparison based on precision score
+### 5.1 Comparison based on precision score
 For the positive class, we see the precision obtained by LR was 88%, KNN was 87%, and RF was 83%. For the negative class, the precision obtained by LR was 72%, KNN was 75% and RF was 85%. Based on this metric alone, the LR model attains the highest precision of 88% for the positive class, while RF attains the highest precision of 85% for the negative class.
 
-#### 4.3.2 Comparison based on recall score
+### 5.2 Comparison based on recall score
 For the positive class, we see the recall obtained by LR was 73%, KNN was 78%, and RF was 90%. For the negative class, the recall obtained by LR was 87%, KNN was 85%, and RF was 77%. Based on this metric alone, the RF model attains the highest recall of 90% for the positive class, while LR attains the highest recall of 87% for the negative class.
 
-#### 4.3.3 Comparison based on F1 score
+### 5.3 Comparison based on F1 score
 For the positive class, we see the F1 score obtained by LR was 79%, KNN was 82%, and RF was 86%. For the negative class, the F1 score obtained by LR was 79%, KNN was 80%, and RF was 81%. Based on this metric alone, the RF model attained the highest F1 scores for both the positive and negative classes, of 86% and 81% respectively.
 
 Having summarised these results, we now relate the metrics of precision, recall and F1 score to the classification problem at hand. We first generalise that for any problem involving classification, models possessing higher precision are cautious of making positive predictions (as false positives are deemed undesirable), while models possessing higher recall are cautious of making negative predictions (as false negatives are deemed) undesirable. Translating this to our context, we can ascertain the following for the positive and negative classes. For the positive class (application is approved), the bank should aim to minimise the occurrence of false negatives. This means a model with a higher recall score for the positive class would prove more beneficial for correctly approving an application. In this case, the RF model serves as an appropriate solution, yielding the highest recall score of 90%. For the negative class (application is denied), the bank should aim to maximise the occurrence of false positives. This means a model with a higher precision score for the negative class would prove more beneficial for correctly rejecting an application. In this case, the RF model again serves as an appropriate solution, yielding the highest precision score of 85%. This is supported by the F1 score metric, which functions as the harmonic mean of the precision and recall scores. This particular metric takes into account not only the number of predictions that were correct, but also the type of errors that were incurred, such as false positives and false negatives. With the RF model also attaining the highest F1 score for both positive and negative classes, we can conclude that this model would be the most appropriate for application out of the three.
 
-## 5. Conclusion and Future Work
+## 6. Conclusion and Future Work
 The aim of this project was to consolidate on our understanding of those principles fundamental to machine learning and to enable knowledge expansion of this domain. Through the context of predicting credit card approvals, we engineered statistical methods with machine learning algorithms in a manner congruent with their applications within the data science discipline. We implemented three popular classification algorithms (Logistic Regression, k-Nearest Neighbours and Random Forest) whose ensuing models were compared using the precision, recall and F1 score metrics. It was determined that the Random Forest model would be the most appropriate for this scenario, attaining the highest score across these metrics. Future efforts involve extending this project so as to further advance our knowledge of machine learning methods and the data science practice as a whole. Possible extensions would include properly assessing the distribution of the numerical features via more rigorous statistical methods, such as hypothesis tests or non-parametric tests. This would allow for a better determination of whether the extreme values in the dataset can be considered as true outliers. The effect of removing any outliers on the performance of these three ML models can then be examined. Additionally, further exploration of those hyperparameters specific to these algorithms, and combinations thereof, can be studied in conjunction with their effects on their model's predictive power. This would also be supplemented with exploring other classification algorithms, such as support vector machines (SVM) or gradient boosting.
 
 
