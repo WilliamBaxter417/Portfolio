@@ -1,13 +1,13 @@
 # Predicting Credit Card Approvals using Machine Learning
 Credit card approvals comprise the many types of applications received by modern commerical banking institutions. A variety of metrics are used to determine an individual's successful credit card approval, inluding their age, income and credit score. With the growing number of these applications, their manual analysis is often time-consuming and can be subject to error. Machine learning methods provide an effective solution for automating this process, which ultimately involves a classification task, i.e. the application is either accepted or denied. For this project, we build a predictor which automates the credit card approval process via machine learning methods using the following three classification algorithms: Logistic Regression (LR), k-Nearest Neighbours (KNN) and Random Forest (RF). We organise this document according to those steps comprising the general data science pipeline. The following table of contents summarises these sections:
-- Section 1: &nbsp;Import Packages and Dataset
-- Section 2: &nbsp;Data Exploration
-- Section 3: &nbsp;Preprocessing the data
-- Section 4: &nbsp;Classification using Machine Learning
-- Section 5: &nbsp;Results and Evaluation
-- Section 6: &nbsp;Conclusion and Future Work
+- Section 1: [Import Packages and Dataset](#1-import-packages-and-dataset)
+- Section 2: [Data Exploration](#2-data-exploration)
+- Section 3: [Preprocessing the data](#3-preprocessing-the-data)
+- Section 4: [Classification using Machine Learning](#4-classification-using-machine-learning)
+- Section 5: [Results and Evaluation](#5-results-and-evaluation)
+- Section 6: [Conclusion and Future Work](#6-conclusion-and-future-work)
 
-## 1. Import Packages and Dataset
+## 1. Import packages and dataset
 We begin by importing the necessary Python libraries.
 ```python
 # Math and Plotting libraries
