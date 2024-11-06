@@ -27,6 +27,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+# Personal libraries
+import MySubs
 ```
 
 This project utilises the [credit card approval dataset](https://archive.ics.uci.edu/dataset/27/credit+approval) imported from the UCI Machine Learning Repository which has been anonymised for confidentiality. We import the dataset as follows:
@@ -200,7 +203,6 @@ None
 ```python
 # Check summary statistics
 print('credit_df.describe():\n')
-pd.options.display.max_columns = None
 print(credit_df.describe())
 ```
 ```python
@@ -224,7 +226,7 @@ y = credit_df['A16']
 # Extract features
 X_features = credit_df.drop(['A16'], axis = 1)
 ```
-Now, we generate the corresponding histograms for those numerical features comprising the ```X_features``` dataframe. To generalise our implementation for scalability, we create a module called ```CCASubs``` and within it, develop a function to automatically extract the column header names for those categorical and numerical features.
+Now, we generate the corresponding histograms for those numerical features comprising the ```X_features``` dataframe. To generalise our implementation for scalability, we create a module called ```MySubs``` and within it, develop a function to automatically extract the column header names for those categorical and numerical features.
 ```python
 ## EXTRACTS HEADER NAMES OF CATEGORICAL AND NUMERICAL COLUMNS IN DATAFRAME
 ## INPUTS:
@@ -253,13 +255,13 @@ def get_categorical_numerical_headers(df):
 
     return obj_col, num_col
 ```
-Importing the ```CCASubs``` module containing the ```get_categorical_numerical_headers()``` function, we extract the header names for the categorical and numerical features from ```X_features```.
+Importing the ```MySubs``` module containing the ```get_categorical_numerical_headers()``` function, we extract the header names for the categorical and numerical features from ```X_features```.
 ```python
 # Import module containing the impute_train_test function
-import CCASubs
+import MySubs
 
 # Get header names for the categorical and numerical columns
-cat_cols, num_cols = CCASubs.get_categorical_numerical_headers(X_features)
+cat_cols, num_cols = MySubs.get_categorical_numerical_headers(X_features)
 ```
 Generate the histograms for those numerical features using ```num_cols```.
 ```python
@@ -433,10 +435,10 @@ def impute_train_test(train_df, test_df):
                 test_df.loc[idx, col] = train_mean
 
 ```
-Input ```Xtrain``` and ```Xtest``` to this function (contained in ```CCASubs.py```) and verify that they contain no missing values.
+Input ```Xtrain``` and ```Xtest``` to this function (contained in ```MySubs.py```) and verify that they contain no missing values.
 ```python
 # Impute Xtrain and Xtest using the impute_train_test function
-CCASubs.impute_train_test(Xtrain, Xtest)
+MySubs.impute_train_test(Xtrain, Xtest)
 
 # Count number of nan entries in Xtrain after imputing
 print('Number of nan entries in Xtrain after imputing:\n')
