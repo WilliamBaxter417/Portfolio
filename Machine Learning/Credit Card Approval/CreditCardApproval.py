@@ -20,8 +20,11 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from matplotlib.patches import Patch
 
-# My subfunctions
-import CCASubs
+# Personal libraries
+import MySubs
+
+# Miscellaneous initialisations
+pd.set_option('display.max_columns', 50)
 
 ##########################################################################################
 ##################################### IMPORT DATASET #####################################
@@ -70,7 +73,7 @@ num_idx = np.where(X_features.dtypes != 'O')[0]
 
 ## GENERATE HISTOGRAM OF NUMERICAL FEATURES BEFORE PREPROCESSING
 # Get header names for the categorical and numerical columns
-cat_cols, num_cols = CCASubs.get_categorical_numerical_headers(X_features)
+cat_cols, num_cols = MySubs.get_categorical_numerical_headers(X_features)
 # Array of characteristics
 feature_character = ['Gender', 'Age', 'Debt', 'Marital status', 'Bank customer type', 'Education level', 'Ethnicity', 'Years of Employment', 'Prior default', 'Employment status', 'Credit score', 'Drivers license type', 'Citizenship status', 'Zipcode', 'Income']
 
@@ -133,7 +136,7 @@ print('Number of nan entries in X_test before imputing:\n')
 print(X_test.isna().sum())
 
 # Impute X_train and X_test using the impute_train_test function
-CCASubs.impute_train_test(X_train, X_test)
+MySubs.impute_train_test(X_train, X_test)
 
 # Count number of nan entries in X_train after imputing
 print('Number of nan entries in X_train after imputing:\n')
