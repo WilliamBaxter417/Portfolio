@@ -309,8 +309,19 @@ revol_util (numerical) => Number of missing values: 179 ==> 0.067461%
 mort_acc (numerical) => Number of missing values: 25196 ==> 9.495741%
 pub_rec_bankruptcies (numerical) => Number of missing values: 357 ==> 0.134544%
 ```
+From the above, ```emp_title```, ```emp_length``` and ```title``` are categorical features, while ```revol_util```, ```mort_acc``` and ```pub_rec_bankruptcies``` are numerical features. The ```mort_acc``` feature has the highest proportion of missing values, while the ```revol_util``` and ```pub_rec_bankruptcies``` features have the lowest proportions.
 
-
+Now, given there are 26 features comprising the training data, let us determine whether any features exhibit collinearity. We first do this for the numerical features, plotting a heatmap matrix of their Spearman's rank correlation coefficients between them.
+```python
+# Plot heatmap of Spearman's rank correlation coefficient for numerical features
+plt.figure(figsize = (12, 8))
+sns.heatmap(X_train[num_label].corr(method = 'spearman'), annot = True, center = 1)
+plt.title('Heatmap of Spearman rank correlation coefficient')
+plt.show()
+```
+<p align="center">
+  <img src="https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Predicting%20Loan%20Repayments/images/heatmapSpearman.png" />
+</p>
 
 
 
