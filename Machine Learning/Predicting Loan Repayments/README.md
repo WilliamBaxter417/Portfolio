@@ -311,7 +311,7 @@ pub_rec_bankruptcies (numerical) => Number of missing values: 357 ==> 0.134544%
 ```
 From the above, ```emp_title```, ```emp_length``` and ```title``` are categorical features, while ```revol_util```, ```mort_acc``` and ```pub_rec_bankruptcies``` are numerical features. The ```mort_acc``` feature has the highest proportion of missing values, while the ```revol_util``` and ```pub_rec_bankruptcies``` features have the lowest proportions.
 
-Now, given there are 26 features comprising the training data, let us determine whether any features exhibit collinearity. We first do this for the numerical features, plotting a heatmap matrix of their Spearman's rank correlation coefficients between them.
+Now, given there are 26 features comprising the training data, let us determine whether any features exhibit collinearity. We first do this for the numerical features, plotting a heatmap matrix of the Spearman's rank correlation coefficients between them. A coefficient of 1 indicates that a pair of features are highly collinear. Determining collinearity across these features may give early indication of which can be ignored during any future feature selection.
 ```python
 # Plot heatmap of Spearman's rank correlation coefficient for numerical features
 plt.figure(figsize = (12, 8))
@@ -322,6 +322,64 @@ plt.show()
 <p align="center">
   <img src="https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Predicting%20Loan%20Repayments/images/heatmapSpearman.png" />
 </p>
+
+We see that loan_amnt and installment exhibit a high degree of correlation, with a coefficient of 0.97. Let us visualise a bivariate scatter plot of these two features.
+```python
+# Draw scatter plot between loan_amnt and installment features.
+plt.figure(figsize = (12, 8))
+ax = sns.regplot(data = X_train, x = 'loan_amnt', y = 'installment', fit_reg = True, marker = 'x', color = '.3', line_kws = dict(color = 'r'))
+ax.set(xlabel = 'Loan Amount', ylabel = 'Installment', title = 'Scatter plot of Installment vs. Loan amount')
+ax.set_xlim(xmin = 0)
+ax.set_ylim(ymin = 0, ymax = 1600)
+plt.grid()
+plt.show()
+```
+<p align="center">
+  <img src="https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Predicting%20Loan%20Repayments/images/scatterplot_installment_vs_loan_amnt.png" />
+</p>
+In this dataset, ```loan_amnt``` is the listed loan amount applied for by the borrower, while ```installment``` is the monthly payment owed by the borrower if the loan is approved. Then, it makes sense that these two features are collinear (and thus linearly correlated), so there is nothing out of the ordinary here. Looking back at the heatmap, this would explain why ```loan_amnt``` and ```installment``` exhibit similar correlation coefficients with the remaining numerical features. This means that we can drop either one of these features later on. We proceed by plotting the histograms of ```loan_amnt``` and ```installment``` by ```loan_status``` in order to visualise their distributions. We facilitate this by creating a helper function, ```hist_by_loan_status```, in the ```PLRsubs``` module.
+
+```python
+def hist_by_loan_status(X_train, y_train, label):
+    fig, ax = plt.subplots(figsize=(10, 5))
+    bins = vectorise_fun(np.histogram(np.hstack((X_train[label][y_train == 'Fully Paid'], X_train[label][y_train == 'Charged Off'])), bins = 50)[1])
+    X_train[label][y_train == 'Fully Paid'].hist(bins = bins, color = 'blue', edgecolor = 'black', alpha = 0.5)
+    X_train[label][y_train == 'Charged Off'].hist(bins = bins, color = 'red', edgecolor = 'black', alpha = 0.5)
+
+   return fig, ax, bins
+```
+Then calling this function to generate the plots:
+```python
+# Plot histogram for Installment feature.
+fig_installment, ax_installment, bins_installment = PLRsubs.hist_by_loan_status(X_train, y_train, 'installment')
+fig_installment = PLRsubs.bins_labels(bins_installment, fig_installment, ax_installment)
+plt.xlabel('Installment')
+plt.ylabel('Count')
+plt.title('Installment by Loan Status')
+plt.legend(['Fully Paid', 'Charged Off'], title = 'Loan status')
+plt.grid(False)
+
+# Plot histogram for loan_amnt feature.
+fig_loan_amnt, ax_loan_amnt, bins_loan_amnt = PLRsubs.hist_by_loan_status(X_train, y_train, 'loan_amnt')
+fig_loan_amnt = PLRsubs.bins_labels(bins_loan_amnt, fig_loan_amnt, ax_loan_amnt)
+plt.xlabel('Loan Amount')
+plt.ylabel('Count')
+plt.title('Loan Amount by Loan Status')
+plt.legend(['Fully Paid', 'Charged Off'], title = 'Loan status')
+plt.grid(False)
+```
+<p align="center">
+  <img src="https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Predicting%20Loan%20Repayments/images/hist_installment_by_loan_status.png" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/WilliamBaxter417/Portfolio/blob/main/Machine%20Learning/Predicting%20Loan%20Repayments/images/hist_loan_amnt_by_loan_status.png" />
+</p>
+In the installment histogram, the distributions of the Fully Paid and Charged Off borrowers are similar in shape. Both distributions exhibit a clear bell-curve shape, appearing to be normal and right-skewed. For both target classes, this implies their means are greater than the medians. In the histogram for loan amount, the distributions of the Fully Paid and Charged Off borrowers are also similar in shape. However, compared to the installment histogram, we see more fluctuations in count values across the bins for both target classes. Interestingly, within each bin, the relative difference between the two target classes appears similar. We now draw box-plots for the installments and loan amount by loan status.
+
+
+
+
 
 
 
