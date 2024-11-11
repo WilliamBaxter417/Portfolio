@@ -98,41 +98,45 @@ credit_approval.data.original:
 ```
 The dataset contains 690 rows with some missing values, with the 'original' key being composed of the columns from the 'features' and 'targets' keys. Upon further inspection of the ```credit_approval.data.original``` dataframe, we identify its attributes to be:
 
-- A1: a, b
-- A2: continuous
-- A3: continuous
-- A4: u, y, l, t
-- A5: g, p, gg
-- A6: c, d, cc, i, j, k, m, r, q, w, x, e, aa, ff
-- A7: v, h, bb, j, n, z, dd, ff, o
-- A8: continuous
-- A9: t, f
-- A10: t, f
-- A11: continuous
-- A12: t, f
-- A13: g, p, s
-- A14: continuous
-- A15: continuous
-- A16: +, -
+| Feature | Attributes |
+|---------| -----------|
+| A1 | a, b |
+| A2 | continuous |
+| A3 | continuous |
+| A4 | u, y, l, t |
+| A5 | g, p, gg |
+| A6 | c, d, cc, i, j, k, m, r, q, w, x, e, aa, ff |
+| A7 | v, h, bb, j, n, z, dd, ff, o |
+| A8 | continuous |
+| A9 | t, f |
+| A10 | t, f |
+| A11 | continuous |
+| A12 | t, f |
+| A13 | g, p, s |
+| A14 | continuous |
+| A15 | continuous |
+| A16 | +, - |
 
 These anonymised attributes reveal very little about the nature of the features. However, [this resource](http://rstudio-pubs-static.s3.amazonaws.com/73039_9946de135c0a49daa7a0a9eda4a67a72.html) provides insight to those characteristics typically employed by banking institutions when considering credit card applications. Following from this, we can determine with good confidence that the features of the ```credit_approval.data.original``` dataframe must map to the following:
-  
-- A1: Gender
-- A2: Age
-- A3: Debt
-- A4: Marital status
-- A5: Bank customer type
-- A6: Education level
-- A7: Ethnicity
-- A8: Years of Employment
-- A9: Prior default
-- A10: Employment status
-- A11: Credit score
-- A12: Drivers license type
-- A13: Citizenship status
-- A14: Zipcode
-- A15: Income
-- A16: Approval status
+
+| Feature | Proposed description |
+|---------| -----------|
+| A1 | Gender |
+| A2 | Age |
+| A3 | Debt |
+| A4 | Marital status |
+| A5 | Bank customer type |
+| A6 | Education level |
+| A7 | Ethnicity |
+| A8 | Years of Employment |
+| A9 | Prior default |
+| A10 | Employment status |
+| A11 | Credit score |
+| A12 | Drivers license type |
+| A13 | Citizenship status |
+| A14 | Zipcode |
+| A15 | Income |
+| A16 | Approval status |
 
 This mapping will help during the later stages of this project when more informed decisions will be made with the data.
 
