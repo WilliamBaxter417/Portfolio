@@ -1,19 +1,22 @@
-- FHCS is a novel signalling strategy developed for dual-function radar communications systems.
-- We study the impact of information embedding on the transmitted radar waveforms through an assessment of the average ambiguity function (AF) as obtained via Monte Carlo methods.
-- Provide a link to one of the publications for further reading and clarification of the model and its results.
-- The script from which the following document is based is located [here](https://github.com/WilliamBaxter417/Portfolio/blob/main/Dynamic%20Programming%20%26%20Algorithm%20Design/Radar%20Performance%20Analysis/avgAF.py).
-- The \* indicates a reference to my thesis. <br>
+# Radar Performance Analysis of the Frequency-Hopped Code Selection Scheme
+The Frequency-Hopped Code Selection (FHCS) scheme is a novel signalling strategy developed for dual-function radar communications (DFRC) systems. In this project, we utilise the Python environment to implement the FHCS scheme and to study the impact of information embedding on the transmitted radar waveforms through an assessment of the average ambiguity function (AF).
 
-- Begin by importing the following libraries. We will use the Plotly Python Graphing library (insert reason). <br>
+We begin by importing the following libraries.
 ```python
+# Math and Plotting libraries
 import math
 import numpy
 import itertools
-import plotly.express as px
-import plotly.io as pio
-import DFRC
+import matplotlib
+import matplotlib.pyplot as plt
+
+# Personal libraries
+import DFRCsubs
+
+# Miscellaneous initialisations
+matplotlib.use('TkAgg')
 ```
-- Initialise the following parameters to model the virtual DFRC system. <br>
+We include a pre-built module ```DFRCsubs``` that supports this main module ```AvgAFmain```, whose library of functions we will reference throughout this project. Having imported the relevant libraries, we initialise the following parameters that model our virtual DFRC system. As we are implementing a small-scale scenario that can be practically realised on non-HPC workstations, we choose the number of transmitting elements ```M``` to be 2, which entails the number of hopping frequencies ```K``` to be 4. We also set the number of subpulses (chips) ```Q``` comprising the radar fast-time as 5.
 ```python
 ## INITIALISE DFRC PARAMETERS
 Fc = 8e9                                    # Carrier frequency.
@@ -38,16 +41,79 @@ sqrt05 = 1/math.sqrt(2)                     # Convenience.
 FH_set = 1/math.sqrt(Ns) * numpy.exp(1j * 2 * numpy.pi * Fn * Kv * ns)  # Generate (K x ns) matrix of hopping frequencies.
 tau = numpy.arange(-Q*Ns+1,Q*Ns)/Fs         # Vector of time-delays.
 ```
+We now build the accompanying communication symbol dictionaries. To do this, we first delineate the ```BuildDict()``` function within ```DFRCsubs```, which takes the number of hopping frequencies ```K``` and number of chips ```Q``` as inputs, and returns the complete symbol dictionary ```SymbDict```, directly truncated symbol dictionary ```SymbDict_T_DIR```, complementarily truncated symbol dictionary ```SymbDict_T_CMP```, the cardinality of the complete symbol dictionary ```L``` and truncated symbol dictionaries ```L_tilde```, and the maximum number of bits necessary to encode the truncated dictionaries ```N_bits```.
+```python
+## INPUTS:
+### K: number of hopping frequencies.
+### M: number of transmitting elements.
+## OUTPUTS:
+### L: maximum no. of symbols in full dictionary.
+### L_tilde: maximum no. of symbols in useable (truncated) dictionaries.
+### N_bits: no. of bits composing a FHCS symbol (assuming dictionary is truncated).
+### D: full dictionary.
+### D_T_DIR: directly truncated dictionary.
+### D_T_CMP: complementarily truncated dictionary.
+def BuildDict(K, M):
+    # Initialise symbol dictionary parameters:
+    L = math.comb(K, M)
+    N_bits = int(np.floor(np.log2(L)))
+    L_tilde = pow(2, N_bits)
+    # Build full dictionary:
+    SymbDict = np.array(list(combinations(range(0,K),M)))
+    SymbDict = SymbDict.transpose()
+    # Build directly truncated dictionary:
+    SymbDict_T_DIR = SymbDict[:,0:L_tilde]
+    # Build complementarily truncated dictionary:
+    SymbDict_T_CMP = np.zeros((M,L_tilde), dtype = int)
+    for i in range(0,int(L_tilde/2)):
+        SymbDict_T_CMP[:,2*i] = SymbDict[:,i]
+        SymbDict_T_CMP[:,2*i+1] = SymbDict[:,L-i-1]
 
-- Build the symbol dictionaries.
+    return L, L_tilde, N_bits, SymbDict, SymbDict_T_DIR, SymbDict_T_CMP
+```
+Now, calling this function within ```AvgAFmain```:
 ```python
 ## BUILD SYMBOL DICTIONARIES
-### Refer to BuildDict function in DFRC.py for detailed listing of output variables.
-L, L_tilde, N_bits, D, D_T_DIR, D_T_CMP = DFRC.BuildDict(K,M)
+### Refer to BuildDict function in DFRCsubs.py for detailed listing of output variables.
+L, L_tilde, N_bits, D, D_T_DIR, D_T_CMP = DFRCsubs.BuildDict(K, M)
 L_delta = L - L_tilde
 ```
+To aid the viewer's comprehension, we construct the function ```PrintDictionary()``` within ```DFRCsubs```, which prints the sequence of FH codes comprising the input symbol dictionary.
+```python
+## PRINTS VERBOSE SYMBOL DICTIONARY
+## INPUTS:
+### D: symbol dictionary
+def PrintDictionary(D):
+    # Iterate over rows of input symbol dictionary:
+    for i in np.arange(D.shape[0]):
+        print('FH codes assigned to transmit element m = %d: ' % i, end = ' ')
+        # Iterate over columns of input symbol dictionary and print FH codes:
+        for j in np.arange(D.shape[1]):
+            if j != D.shape[1] - 1:
+                print('%d  ' % D[i, j], end = ' ')
+            else:
+                print('%d  ' % D[i, j])
+```
+We parse the symbol dictionaries ```D```, ```D_T_DIR``` and ```D_T_CMP``` to ```PrintDictionary()```, which returns the following console output:
+```python
+{D} -> Complete symbol dictionary (cardinality L = 6)
+-----------------------------------------------------
+FH codes assigned to transmit element m = 0:  0   0   0   1   1   2  
+FH codes assigned to transmit element m = 1:  1   2   3   2   3   3  
 
-- Since we are compressing the transmitted radar pulse, the ensuing time-bandwidth product must be satisfied to ensure proper radar operation\*.
+{D_T_DIR} -> Directly truncated symbol dictionary (cardinality L_tilde = 4)
+---------------------------------------------------------------------------
+FH codes assigned to transmit element m = 0:  0   0   0   1  
+FH codes assigned to transmit element m = 1:  1   2   3   2  
+
+{D_T_CMP} -> Complementarily truncated symbol dictionary (cardinality L_tilde = 4)
+----------------------------------------------------------------------------------
+FH codes assigned to transmit element m = 0:  0   2   0   1  
+FH codes assigned to transmit element m = 1:  1   3   2   3  
+```
+For the matrix of FH codes comprising a symbol dictionary, the respective mapping between its rows and columns to the transmitting elements and symbols are indicated by their ordinal indices. For example, with our simulation employing two transmitting elements, we have row 0 mapping to transmit element 0, and row 1 mapping to transmit element 1. Meanwhile, column 0 maps to symbol 0, column 1 maps to symbol 1, etc. Hence, with the complete dictionary ```D``` possessing a cardinality of 6, it has six columns, while ```D_T_DIR``` and ```D_T_CMP``` have four. Also, despite our truncated dictionaries having the same cardinality, notice the difference in their construction from the complete dictionary ```D```. Specifically, the directly truncated dictionary ```D_T_DIR``` is formed from columns (symbols) 0, 1, 2 and 3 of ```D```, while the complementarily truncated dictionary ```D_T_CMP``` is formed from columns (symbols) 0, 1, 5 and 6 of ```D```.
+
+Now, as we are compressing the transmitted radar pulse, the ensuing time-bandwidth product must be satisfied to ensure proper radar operation. We implement the following check:
 ```python
 ## CHECK TIME-BANDWIDTH PRODUCT
 NW = pow(L,Q)
@@ -148,7 +214,9 @@ fig.show()
 ```
 
 Results:
-![avgAF](https://github.com/WilliamBaxter417/Portfolio/blob/main/Dynamic%20Programming%20%26%20Algorithm%20Design/Radar%20Performance%20Analysis/avgAF.png)
+<p align="center">
+  <img src="https://github.com/WilliamBaxter417/Portfolio/blob/main/Dynamic%20Programming%20%26%20Algorithm%20Design/Radar%20Performance%20Analysis/images/avgAF.png" />
+</p>
 
 
 
