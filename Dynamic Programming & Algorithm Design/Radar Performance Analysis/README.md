@@ -41,7 +41,20 @@ sqrt05 = 1/math.sqrt(2)                     # Convenience.
 FH_set = 1/math.sqrt(Ns) * numpy.exp(1j * 2 * numpy.pi * Fn * Kv * ns)  # Generate (K x ns) matrix of hopping frequencies.
 tau = numpy.arange(-Q*Ns+1,Q*Ns)/Fs         # Vector of time-delays.
 ```
-We now build the accompanying communication symbol dictionaries. To do this, we first delineate the ```BuildDict()``` function within ```DFRCsubs```, which takes the number of hopping frequencies ```K``` and number of chips ```Q``` as inputs, and returns the complete symbol dictionary ```SymbDict```, directly truncated symbol dictionary ```SymbDict_T_DIR```, complementarily truncated symbol dictionary ```SymbDict_T_CMP```, the cardinality of the complete symbol dictionary ```L``` and truncated symbol dictionaries ```L_tilde```, and the maximum number of bits necessary to encode the truncated dictionaries ```N_bits```.
+Following this initialisation procedure, we check that the time-bandwidth product of the DFRC system, and thus its ensuing radar operation, is properly satisfied. This is achieved when the product of ```Q``` and ```K``` is less than or equal to the ```TBWP``` variable (which is the product of the pulsewidth and bandwidth of the transmit signal).
+```python
+## CHECK TIME-BANDWIDTH PRODUCT
+if (Q*K <= TBWP):
+    print('Q * K = %d, TBWP = %d >>> GOOD' % (Q*K,TBWP))
+else:
+    print('Q * K = %d, TBWP = %d >>> BAD' % (Q*K,TBWP))
+```
+```python
+NUMBER OF REALISATIONS - COMPLETE CODEBOOK: 7776
+NUMBER OF REALISATIONS - TRUNCATED CODEBOOK: 1024
+Q * K = 20, TBWP = 20 >>> GOOD
+```
+Having verified the time-bandwidth product of our system, we proceed to build the accompanying communication symbol dictionaries. To do this, we first delineate the ```BuildDict()``` function within ```DFRCsubs```, which takes the number of hopping frequencies ```K``` and number of chips ```Q``` as inputs, and returns the complete symbol dictionary ```SymbDict```, directly truncated symbol dictionary ```SymbDict_T_DIR```, complementarily truncated symbol dictionary ```SymbDict_T_CMP```, the cardinality of the complete symbol dictionary ```L``` and truncated symbol dictionaries ```L_tilde```, and the maximum number of bits necessary to encode the truncated dictionaries ```N_bits```.
 ```python
 ## INPUTS:
 ### K: number of hopping frequencies.
@@ -76,7 +89,6 @@ Now, calling this function within ```AvgAFmain```:
 ## BUILD SYMBOL DICTIONARIES
 ### Refer to BuildDict function in DFRCsubs.py for detailed listing of output variables.
 L, L_tilde, N_bits, D, D_T_DIR, D_T_CMP = DFRCsubs.BuildDict(K, M)
-L_delta = L - L_tilde
 ```
 To aid the viewer's comprehension, we construct the function ```PrintDictionary()``` within ```DFRCsubs```, which prints the sequence of FH codes comprising the input symbol dictionary.
 ```python
@@ -113,38 +125,24 @@ FH codes assigned to transmit element m = 1:  1   3   2   3
 ```
 For the matrix of FH codes comprising a symbol dictionary, the respective mapping between its rows and columns to the transmitting elements and symbols are indicated by their ordinal indices. For example, with our simulation employing two transmitting elements, we have row 0 mapping to transmit element 0, and row 1 mapping to transmit element 1. Meanwhile, column 0 maps to symbol 0, column 1 maps to symbol 1, etc. Hence, with the complete dictionary ```D``` possessing a cardinality of 6, it has six columns, while ```D_T_DIR``` and ```D_T_CMP``` have four. Also, despite our truncated dictionaries having the same cardinality, notice the difference in their construction from the complete dictionary ```D```. Specifically, the directly truncated dictionary ```D_T_DIR``` is formed from columns (symbols) 0, 1, 2 and 3 of ```D```, while the complementarily truncated dictionary ```D_T_CMP``` is formed from columns (symbols) 0, 1, 5 and 6 of ```D```.
 
-Now, as we are compressing the transmitted radar pulse, the ensuing time-bandwidth product must be satisfied to ensure proper radar operation. We implement the following check:
+As the symbol dictionary employed by the DFRC system must be truncated to ensure proper communications performance, we select the complementarily truncated dictionary ```D_T_CMP``` with which to assess the average AF performance. For convenience, we extract those indices from ```D``` which build ```D_T_CMP``` for use later on.
 ```python
-## CHECK TIME-BANDWIDTH PRODUCT
-NW = pow(L,Q)
-NW_trunc = pow(L_tilde,Q)
-print('NUMBER OF REALISATIONS - COMPLETE CODEBOOK: %d' % NW)
-print('NUMBER OF REALISATIONS - TRUNCATED CODEBOOK: %d' % NW_trunc)
-if (Q*K <= TBWP):
-    print('Q * K = %d, TBWP = %d >>> GOOD' % (Q*K,TBWP))
-else:
-    print('Q * K = %d, TBWP = %d >>> BAD' % (Q*K,TBWP))
-```
-
-- Symbol dictionary must be truncated to ensure proper communications performance.
-- Extract indices for those symbols from the full dictionary which will comprise the truncated dictionary\*.
-```python
-## CALCULATE AVERAGE AF ACROSS ALL REALISATIONS FOR TRUNCATED DICTIONARY
-# Store symbol indices from full dictionary used to construct complementarily truncated dictionary:
+# Store symbol indices from full dictionary (D) used to construct complementarily truncated dictionary (D_T_CMP):
+L_delta = L - L_tilde
 SymInd = numpy.concatenate((numpy.arange(int(L_tilde-L_tilde/2)), numpy.arange(int(L_tilde - L_tilde/2 + L_delta),L)))
 ```
 
-- Initialise variables used to store results of Monte Carlo simulation.
+We initialise those variables used to store the results of the Monte Carlo simulation, and generate the complete set of permuted symbol indices ```WPI``` forming all possible radar waveform realisations:
 ```python
+# Initialise Monte Carlo variables
 W_FHCS = numpy.zeros((M,Q*Ns), dtype = 'complex')   # Initialise FHCS waveform realisation.
 afs = numpy.zeros((len(tau),M,M))                   # Initialise AF results matrix.
 AFs = numpy.zeros((len(tau),M,M))                   # Initialise AF results matrix.
-```
 
-- For the truncated dictionary, generate the complete set of permuted symbol indices possible for transmission by the DFRC system\*.
-```python
 # Build matrix of symbol index permutations constructing each of the NW_trunc realisations:
-WPI = numpy.array(list(itertools.product(SymInd, repeat = Q)))
+WPI = np.array(list(itertools.product(SymInd, repeat = Q)))
+NW_trunc = WPI.shape[0]
+print('NUMBER OF WAVEFORM REALISATIONS FOR TRUNCATED CODEBOOK: %d' % NW_trunc)
 ```
 
 - Begin Monte Carlo simulation.
