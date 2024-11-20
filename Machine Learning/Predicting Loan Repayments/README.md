@@ -1,4 +1,4 @@
-# Predicting Loan Repayments using Decision Trees and Feature Selection
+# Loan Repayment Prediction using Feature Selection
 
 ## 1. Import packages and dataset
 We begin by importing the necessary Python libraries.
