@@ -388,25 +388,3 @@ In the installment histogram, the distributions of the Fully Paid and Charged Of
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-## 3. Preprocessing the data
-
-
-## 4. Classification using Machine Learning
-
-
-## 5. Results and Evaluation
-
-
-## 6. Conclusion and Future Work
