@@ -759,44 +759,42 @@ Best parameters: {'penalty': 'l2'}
 Training accuracy: 87.862319%
 Testing accuracy: 78.985507%
 Confusion matrix: 
-[[53  8]
- [21 56]]
+[[56 21]
+ [ 8 53]]
 Classification report: 
               precision    recall  f1-score   support
-           -       0.72      0.87      0.79        61
-           +       0.88      0.73      0.79        77
+           -       0.88      0.73      0.79        77
+           +       0.72      0.87      0.79        61
     accuracy                           0.79       138
    macro avg       0.80      0.80      0.79       138
 weighted avg       0.80      0.79      0.79       138
-
 //-----KNN-----//
 Accuracy (averaged over CV test folds): 86.956522%
 Best parameters: {'n_neighbors': 8}
 Training accuracy: 88.949275%
 Testing accuracy: 81.159420%
 Confusion matrix: 
-[[52  9]
- [17 60]]
+[[60 17]
+ [ 9 52]]
 Classification report: 
               precision    recall  f1-score   support
-           -       0.75      0.85      0.80        61
-           +       0.87      0.78      0.82        77
+           -       0.87      0.78      0.82        77
+           +       0.75      0.85      0.80        61
     accuracy                           0.81       138
    macro avg       0.81      0.82      0.81       138
 weighted avg       0.82      0.81      0.81       138
-
 //-----RF-----//
 Accuracy (averaged over CV test folds): 87.500000%
 Best parameters: {'max_depth': 3}
 Training accuracy: 89.673913%
 Testing accuracy: 84.057971%
 Confusion matrix: 
-[[47 14]
- [ 8 69]]
+[[69  8]
+ [14 47]]
 Classification report: 
               precision    recall  f1-score   support
-           -       0.85      0.77      0.81        61
-           +       0.83      0.90      0.86        77
+           -       0.83      0.90      0.86        77
+           +       0.85      0.77      0.81        61
     accuracy                           0.84       138
    macro avg       0.84      0.83      0.84       138
 weighted avg       0.84      0.84      0.84       138
@@ -810,15 +808,15 @@ Firstly, inspect the training and testing accuracies for the three models. We se
 Given these complexities, and to avoid further extending this body of work, we proceed to cross-examine our three models using only the above metrics and relating them to the context of credit card application approvals. While simplified in nature, this approach already succeeds in achieving the initial outcome of this project, which was to further consolidate on our understanding of those principles fundamental to machine learning. We note that more rigorous analyses utilising more involved statistical metrics will become the subject of future work.
 
 ### 5.1 Comparison based on precision score
-For the positive class, we see the precision obtained by LR was 88%, KNN was 87%, and RF was 83%. For the negative class, the precision obtained by LR was 72%, KNN was 75% and RF was 85%. Based on this metric alone, the LR model attains the highest precision of 88% for the positive class, while RF attains the highest precision of 85% for the negative class.
+For the positive class, we see the precision obtained by LR was 72%, KNN was 75%, and RF was 85%. For the negative class, the precision obtained by LR was 88%, KNN was 87% and RF was 83%. Based on this metric alone, the RF model attains the highest precision of 85% for the positive class, while LR attains the highest precision of 88% for the negative class.
 
 ### 5.2 Comparison based on recall score
-For the positive class, we see the recall obtained by LR was 73%, KNN was 78%, and RF was 90%. For the negative class, the recall obtained by LR was 87%, KNN was 85%, and RF was 77%. Based on this metric alone, the RF model attains the highest recall of 90% for the positive class, while LR attains the highest recall of 87% for the negative class.
+For the positive class, we see the recall obtained by LR was 87%, KNN was 85%, and RF was 77%. For the negative class, the recall obtained by LR was 73%, KNN was 78%, and RF was 90%. Based on this metric alone, the LR model attains the highest recall of 87% for the positive class, while RF attains the highest recall of 90% for the negative class.
 
 ### 5.3 Comparison based on F1 score
-For the positive class, we see the F1 score obtained by LR was 79%, KNN was 82%, and RF was 86%. For the negative class, the F1 score obtained by LR was 79%, KNN was 80%, and RF was 81%. Based on this metric alone, the RF model attained the highest F1 scores for both the positive and negative classes, of 86% and 81% respectively.
+For the positive class, we see the F1 score obtained by LR was 79%, KNN was 80%, and RF was 81%. For the negative class, the F1 score obtained by LR was 79%, KNN was 82%, and RF was 86%. Based on this metric alone, the RF model attained the highest F1 scores for both the positive and negative classes, of 81% and 86% respectively.
 
-Having summarised these results, we now relate the metrics of precision, recall and F1 score to the classification problem at hand. We first generalise that for any problem involving classification, models possessing higher precision are cautious of making positive predictions (as false positives are deemed undesirable), while models possessing higher recall are cautious of making negative predictions (as false negatives are deemed) undesirable. Translating this to our context, we can ascertain the following for the positive and negative classes. For the positive class (application is approved), the bank should aim to minimise the occurrence of false negatives. This means a model with a higher recall score for the positive class would prove more beneficial for correctly approving an application. In this case, the RF model serves as an appropriate solution, yielding the highest recall score of 90%. For the negative class (application is denied), the bank should aim to maximise the occurrence of false positives. This means a model with a higher precision score for the negative class would prove more beneficial for correctly rejecting an application. In this case, the RF model again serves as an appropriate solution, yielding the highest precision score of 85%. This is supported by the F1 score metric, which functions as the harmonic mean of the precision and recall scores. This particular metric takes into account not only the number of predictions that were correct, but also the type of errors that were incurred, such as false positives and false negatives. With the RF model also attaining the highest F1 score for both positive and negative classes, we can conclude that this model would be the most appropriate for application out of the three.
+Having summarised these results, we now relate the metrics of precision, recall and F1 score to the classification problem at hand. We first generalise that for any problem involving classification, models possessing higher precision are cautious of making positive predictions (as false positives are deemed undesirable), while models possessing higher recall are cautious of making negative predictions (as false negatives are deemed) undesirable. Translating this to our context, we can ascertain the following for the positive and negative classes. For the positive class (application is approved), the bank should aim to minimise the occurrence of false negatives. This means a model with a higher recall score for the positive class would prove more beneficial for correctly approving an application. In this case, the LR model serves as an appropriate solution, yielding the highest recall score of 87%. For the negative class (application is denied), the bank should aim to maximise the occurrence of false positives. This means a model with a higher precision score for the negative class would prove more beneficial for correctly rejecting an application. In this case, the LR model again serves as an appropriate solution, yielding the highest precision score of 88%. Now, we look to the F1 score metric, which functions as the harmonic mean of the precision and recall scores and accounts for not only the number of predictions that were correct, but also the type of errors that were incurred (such as false positives and false negatives). The RF model attains the highest F1 score out of the models for both positive and negative classes. Given that our dataset is balanced, it would be reasonable to conclude that either the LR or RF models would be appropriate for application out of the three. If the dataset were imbalanced, further scrutiny of these metrics, and others, would be required.
 
 ## 6. Conclusion and Future Work
 <p align="right"> <a href="#predicting-credit-card-approvals-using-machine-learning">🔼 back to top</a> </div>
